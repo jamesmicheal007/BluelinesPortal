@@ -1,0 +1,125 @@
+﻿@page
+@model BluelinesPortal.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold">Platform Overview</h2>
+    <span class="text-muted"><i class="bi bi-clock me-1"></i> Live Data</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
+            <div class="card-body py-4">
+                <p class="text-muted text-uppercase fw-bold small mb-1">Total Revenue</p>
+                <h2 class="display-6 fw-bold text-dark mb-0">₹@Model.TotalRevenue.ToString("N0")</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
+            <div class="card-body py-4">
+                <p class="text-muted text-uppercase fw-bold small mb-1">Registered Students</p>
+                <h2 class="display-6 fw-bold text-dark mb-0">@Model.TotalStudents</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
+            <div class="card-body py-4">
+                <p class="text-muted text-uppercase fw-bold small mb-1">Total Applications</p>
+                <h2 class="display-6 fw-bold text-dark mb-0">@Model.TotalApplications</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold"><i class="bi bi-graph-up text-primary me-2"></i> Revenue (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="fw-bold"><i class="bi bi-pie-chart text-success me-2"></i> Application Status</h5>
+            </div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="bg-light p-4 rounded-3 text-center">
+            <h6 class="fw-bold text-muted mb-3">Quick Actions</h6>
+            <a asp-page="/Admin/Applications/Index" class="btn btn-primary px-4 me-2"><i class="bi bi-inbox me-1"></i> Triage Applications</a>
+            <a asp-page="/Admin/Submissions/Index" class="btn btn-outline-dark px-4 me-2"><i class="bi bi-pencil-square me-1"></i> Grade Submissions</a>
+            <a asp-page="/Admin/Finance/ManualEntry" class="btn btn-outline-success px-4"><i class="bi bi-cash me-1"></i> Log Payment</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // 1. Initialize the Application Status Pie Chart
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                // Safely inject C# lists into JavaScript arrays
+                labels: @Html.Raw(Json.Serialize(Model.StatusLabels)),
+                datasets: [{
+                    data: @Html.Raw(Json.Serialize(Model.StatusCounts)),
+                    backgroundColor: [
+                        '#ffc107', // Warning/Pending
+                        '#0d6efd', // Primary/Approved
+                        '#198754', // Success/Enrolled
+                        '#dc3545'  // Danger/Rejected
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        // 2. Initialize the Revenue Bar Chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: @Html.Raw(Json.Serialize(Model.RevenueLabels)),
+                datasets: [{
+                    label: 'Daily Revenue (₹)',
+                    data: @Html.Raw(Json.Serialize(Model.RevenueData)),
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+}

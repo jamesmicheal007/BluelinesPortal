@@ -1,0 +1,81 @@
+﻿@page "{id:int}"
+@using BluelinesPortal.Models
+@model BluelinesPortal.Pages.Admin.Applications.ReviewModel
+@{
+    ViewData["Title"] = "Review Application";
+}
+
+<div class="mb-4">
+    <a asp-page="./Index" class="text-decoration-none"><i class="bi bi-arrow-left"></i> Back to Applications</a>
+    <h3 class="mt-2">Review Application #@Model.ApplicationRecord.Id</h3>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">Student Profile Details</div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Full Name</dt>
+                    <dd class="col-sm-8">@Model.ApplicationRecord.Student.FullName</dd>
+
+                    <dt class="col-sm-4">College / University</dt>
+                    <dd class="col-sm-8">@Model.ApplicationRecord.Student.CollegeName</dd>
+
+                    <dt class="col-sm-4">Degree & Year</dt>
+                    <dd class="col-sm-8">@Model.ApplicationRecord.Student.Degree (Year @Model.ApplicationRecord.Student.YearOfStudy)</dd>
+
+                    <dt class="col-sm-4">Current Tech Stack</dt>
+                    <dd class="col-sm-8">@Model.ApplicationRecord.Student.CurrentTechStack</dd>
+
+                    <dt class="col-sm-4">GitHub URL</dt>
+                    <dd class="col-sm-8">
+                        @if (!string.IsNullOrEmpty(Model.ApplicationRecord.Student.GitHubProfileUrl))
+                        {
+                            <a href="@Model.ApplicationRecord.Student.GitHubProfileUrl" target="_blank">View Profile</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Not provided</span>
+                        }
+                    </dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-bold">Program Applied For</div>
+            <div class="card-body">
+                <h5 class="card-title">@Model.ApplicationRecord.Program.Title</h5>
+                <p class="card-text mb-1"><strong>Type:</strong> @Model.ApplicationRecord.Program.Type</p>
+                <p class="card-text"><strong>Base Fee:</strong> ₹@Model.ApplicationRecord.Program.BaseFee.ToString("0.00")</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card shadow-sm border-primary">
+            <div class="card-header bg-primary text-white fw-bold">Admin Decision</div>
+            <div class="card-body">
+                <form method="post">
+                    <input type="hidden" asp-for="ApplicationRecord.Id" />
+
+                    <div class="mb-3">
+                        <label asp-for="ApplicationRecord.Status" class="form-label fw-bold">Update Application Status</label>
+                        <select asp-for="ApplicationRecord.Status" class="form-select border-primary" asp-items="Html.GetEnumSelectList<ApplicationStatus>()"></select>
+                        <div class="form-text">Changing status to 'Approved' will allow the student to pay the fee.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ApplicationRecord.AdminNotes" class="form-label fw-bold">Internal Admin Notes</label>
+                        <textarea asp-for="ApplicationRecord.AdminNotes" class="form-control" rows="5" placeholder="Private notes for Bluelines staff only..."></textarea>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Save Decision</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

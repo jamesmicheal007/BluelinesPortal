@@ -1,0 +1,130 @@
+﻿@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<style>
+    .auth-container {
+        min-height: 75vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+
+    .auth-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        width: 100%;
+        max-width: 450px;
+        overflow: hidden;
+    }
+
+    .auth-header {
+        text-align: center;
+        padding: 2.5rem 2rem 1.5rem;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 1.5rem 0;
+        color: #adb5bd;
+    }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .divider:not(:empty)::before {
+            margin-right: .5em;
+        }
+
+        .divider:not(:empty)::after {
+            margin-left: .5em;
+        }
+
+    .btn-gradient {
+        background: var(--ig-gradient, linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%));
+        color: white !important;
+        border: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(220, 39, 67, 0.3);
+        }
+
+    .form-floating:focus-within label {
+        color: #dc2743;
+    }
+</style>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle mb-3 shadow-sm" style="background: rgba(220, 39, 67, 0.1); color: #dc2743;">
+                <i class="bi bi-person-circle fs-1"></i>
+            </div>
+            <h3 class="fw-bold mb-1">Welcome Back</h3>
+            <p class="text-muted small">Sign in to continue to your workspace.</p>
+        </div>
+
+        <div class="px-4 pb-4 px-md-5 pb-md-5">
+            <!-- External Login (Google) -->
+            <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <button type="submit" class="btn btn-outline-dark btn-lg w-100 py-3 fw-bold d-flex align-items-center justify-content-center shadow-sm rounded-pill" name="provider" value="Google" title="Log in using your Google account">
+                    <i class="bi bi-google me-2 text-danger"></i> Continue with Google
+                </button>
+            </form>
+
+            <div class="divider small fw-bold text-uppercase tracking-wide">Or use email</div>
+
+            <!-- Local Login -->
+            <form id="account" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3" role="alert"></div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Email" class="form-control rounded-4" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label asp-for="Input.Email" class="text-muted">Email address</label>
+                    <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input asp-for="Input.Password" class="form-control rounded-4" autocomplete="current-password" aria-required="true" placeholder="password" />
+                    <label asp-for="Input.Password" class="text-muted">Password</label>
+                    <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" asp-for="Input.RememberMe" id="rememberMe" />
+                        <label class="form-check-label text-muted small" for="rememberMe">
+                            @Html.DisplayNameFor(m => m.Input.RememberMe)
+                        </label>
+                    </div>
+                    <a id="forgot-password" asp-page="./ForgotPassword" class="text-decoration-none small fw-bold" style="color: #dc2743;">Forgot Password?</a>
+                </div>
+
+                <button id="login-submit" type="submit" class="w-100 btn btn-gradient btn-lg py-3 fw-bold shadow-sm rounded-pill mb-3">Sign In</button>
+
+                <div class="text-center text-muted small mt-4">
+                    Don't have an account? <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none fw-bold" style="color: #dc2743;">Create one now</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

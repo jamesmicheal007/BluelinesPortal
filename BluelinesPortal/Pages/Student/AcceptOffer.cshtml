@@ -1,0 +1,61 @@
+﻿@page "{id:int}"
+@model BluelinesPortal.Pages.Student.AcceptOfferModel
+@{
+    ViewData["Title"] = "Accept Admission Offer";
+}
+
+<div class="row justify-content-center mt-4 mb-5">
+    <div class="col-md-9 col-lg-8">
+
+        <div class="card shadow-lg border-0 rounded-3">
+            <div class="card-header bg-dark text-white p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-0 text-primary fw-bold">Bluelines Tech Solutions</h3>
+                    <p class="mb-0 text-light opacity-75">Official Admission Offer</p>
+                </div>
+                <div class="text-end">
+                    <p class="mb-0">Date: @DateTime.UtcNow.ToString("dd MMM yyyy")</p>
+                    <p class="mb-0">App ID: #@Model.ApprovedApplication.Id</p>
+                </div>
+            </div>
+
+            <div class="card-body p-4 p-md-5">
+                <h4 class="mb-4">Dear @Model.ApprovedApplication.Student.FullName,</h4>
+                <p class="fs-5">
+                    Congratulations! We are pleased to inform you that your application has been reviewed and <strong class="text-success">Approved</strong>.
+                    You are officially invited to join the following program:
+                </p>
+
+                <div class="bg-light p-4 rounded-3 mb-4 border border-primary border-opacity-25">
+                    <h3 class="text-primary fw-bold mb-1">@Model.ApprovedApplication.Program.Title</h3>
+                    <p class="text-muted mb-3">@Model.ApprovedApplication.Program.Type | @Model.ApprovedApplication.Program.DurationInDays Days Duration</p>
+
+                    <hr />
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <span class="fs-5 fw-bold">Total Program Fee:</span>
+                        <span class="fs-3 fw-bold text-success">₹@Model.ApprovedApplication.Program.BaseFee.ToString("0.00")</span>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-shield-lock-fill me-2"></i>
+                    To secure your seat and unlock your project workspace, please accept this offer by completing the payment below.
+                </div>
+
+                <form method="post" class="mt-5 text-center">
+                    <input type="hidden" name="id" value="@Model.ApprovedApplication.Id" />
+
+                    <p class="text-muted small mb-3">By clicking 'Pay Securely', you agree to the Bluelines Tech terms of enrollment.</p>
+
+                    <button type="submit" class="btn btn-success btn-lg px-5 py-3 fw-bold shadow">
+                        <i class="bi bi-credit-card me-2"></i> Pay ₹@Model.ApprovedApplication.Program.BaseFee.ToString("0.00") Securely
+                    </button>
+                    <br />
+                    <a asp-page="/Dashboard/Index" class="btn btn-link text-muted mt-3">I need more time to decide</a>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>

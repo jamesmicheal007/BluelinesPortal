@@ -1,0 +1,155 @@
+﻿@page "{id:int}"
+@model BluelinesPortal.Pages.Admin.Finance.ReceiptModel
+@{
+    ViewData["Title"] = "Payment Receipt";
+}
+
+<style>
+    .invoice-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+        border-top: 8px solid #0d6efd;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .watermark {
+        position: absolute;
+        top: 30%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-30deg);
+        font-size: 8rem;
+        font-weight: 900;
+        color: rgba(25, 135, 84, 0.05); /* Very faint green */
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    /* Print Styles to hide the portal UI and just print the invoice */
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+
+        .printable-area, .printable-area * {
+            visibility: visible;
+        }
+
+        .printable-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            box-shadow: none !important;
+            border-top: none !important;
+        }
+
+        .hide-on-print {
+            display: none !important;
+        }
+    }
+</style>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 hide-on-print">
+    <a asp-page="./Index" class="btn btn-light border shadow-sm rounded-pill px-3 fw-bold mb-3 mb-md-0">
+        <i class="bi bi-arrow-left me-1"></i> Back to Ledger
+    </a>
+    <div class="d-flex gap-2">
+        <a asp-page-handler="DownloadPdf" asp-route-id="@Model.BillDetails.Id" class="btn btn-outline-danger fw-bold rounded-pill px-4 bg-white">
+            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Save PDF
+        </a>
+        <button onclick="window.print()" class="btn btn-dark fw-bold rounded-pill px-4 shadow-sm">
+            <i class="bi bi-printer-fill me-1"></i> Print Invoice
+        </button>
+    </div>
+</div>
+
+<div class="invoice-card printable-area mb-5">
+    <div class="watermark">PAID</div>
+
+    <div class="card-body p-4 p-md-5 position-relative" style="z-index: 1;">
+
+        <div class="row mb-5 align-items-center pb-4 border-bottom">
+            <div class="col-sm-6 text-center text-sm-start mb-4 mb-sm-0">
+                <h2 class="fw-bold text-primary mb-1">Bluelines Tech <span class="text-dark">Solutions</span></h2>
+                <p class="text-muted mb-0">Rajiv Nagar 6th Street, Kovilpatti, TN</p>
+                <p class="text-muted mb-0">info@bluelinestechsolutions.com | +91 7373 005 005</p>
+            </div>
+            <div class="col-sm-6 text-center text-sm-end">
+                <h1 class="text-uppercase fw-bold text-muted opacity-25 mb-0" style="letter-spacing: 2px;">Receipt</h1>
+                <p class="mb-0 mt-2"><strong>Receipt No:</strong> <span class="font-monospace bg-light px-2 rounded">@Model.BillDetails.PaymentGatewayReference</span></p>
+                <p class="mb-0"><strong>Date:</strong> @Model.BillDetails.PaymentDate.ToString("dd MMM yyyy, HH:mm")</p>
+            </div>
+        </div>
+
+        <div class="row mb-5 bg-light p-4 rounded-4">
+            <div class="col-sm-6 mb-4 mb-sm-0">
+                <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">Billed To</h6>
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-1">ID: @(Model.BillDetails.Application.Student.StudentId ?? "Pending")</span>
+                <h4 class="fw-bold text-dark mb-1">@Model.BillDetails.Application.Student.FullName</h4>
+                <p class="mb-1 text-muted"><i class="bi bi-envelope me-1"></i> @Model.StudentEmail</p>
+                <p class="mb-0 text-muted"><i class="bi bi-building me-1"></i> @Model.BillDetails.Application.Student.CollegeName</p>
+            </div>
+            <div class="col-sm-6 text-sm-end">
+                <h6 class="text-muted text-uppercase fw-bold mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">Payment Information</h6>
+                <p class="mb-1"><strong>Method:</strong> <span class="badge bg-dark">@Model.BillDetails.PaymentMethod</span></p>
+                <p class="mb-0"><strong>Status:</strong> <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> @Model.BillDetails.PaymentStatus</span></p>
+            </div>
+        </div>
+
+        <table class="table table-borderless mb-4">
+            <thead class="border-bottom border-2">
+                <tr>
+                    <th class="py-3 text-muted text-uppercase small">Description</th>
+                    <th class="py-3 text-end text-muted text-uppercase small">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="py-4 border-bottom">
+                        <span class="fw-bold fs-5 text-dark d-block mb-1">Program Enrollment</span>
+                        <span class="text-muted">@Model.BillDetails.Application.Program.Title (@Model.BillDetails.Application.Program.Type)</span>
+                    </td>
+                    <td class="py-4 border-bottom text-end fw-bold fs-5 text-dark">
+                        ₹@Model.BillDetails.AmountPaid.ToString("N2")
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="d-flex justify-content-end mb-5">
+            <div class="text-end" style="min-width: 320px;">
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Program Fee:</span>
+                        <span class="fw-bold text-dark">₹@Model.BillDetails.Application.Program.BaseFee.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Total Paid So Far:</span>
+                        <span class="fw-bold text-dark">₹@Model.TotalPaidSoFar.ToString("N2")</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-danger fw-bold">Balance Remaining:</span>
+                        <span class="fw-bold text-danger">₹@Model.RemainingBalance.ToString("N2")</span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center bg-primary bg-opacity-10 p-3 rounded-3 text-primary">
+                    <span class="fw-bold fs-6">Paid This Transaction:</span>
+                    <span class="fw-bold fs-3">₹@Model.BillDetails.AmountPaid.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.BillDetails.ScreenshotPath))
+        {
+            <div class="p-3 bg-light rounded text-center hide-on-print border border-dashed mb-5">
+                <span class="text-muted fw-bold me-3"><i class="bi bi-paperclip me-1"></i> Proof of Transfer Attached</span>
+                <a href="@Model.BillDetails.ScreenshotPath" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-3">View Document</a>
+            </div>
+        }
+
+        <div class="text-center mt-5 pt-4 border-top text-muted" style="font-size: 0.85rem;">
+            <p class="mb-0 fw-bold">Thank you for registering with Bluelines Tech Solutions!</p>
+            <p class="mb-0 opacity-75">This is a computer-generated receipt and requires no physical signature.</p>
+        </div>
+    </div>
+</div>

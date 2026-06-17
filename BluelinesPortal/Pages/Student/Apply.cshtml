@@ -1,0 +1,67 @@
+﻿@page "{id:int}"
+@model BluelinesPortal.Pages.Student.ApplyModel
+@{
+    ViewData["Title"] = "Apply for Program";
+}
+
+<div class="row justify-content-center mt-4 mb-5">
+    <div class="col-md-8 col-lg-7">
+        <a asp-page="/Programs/OpportunityBoard" class="text-decoration-none mb-3 d-inline-block">
+            <i class="bi bi-arrow-left"></i> Back to Programs
+        </a>
+
+        <div class="card shadow-lg border-0 rounded-3">
+            <div class="card-header bg-primary text-white p-4">
+                <h4 class="mb-0">Application Confirmation</h4>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <h3 class="text-primary fw-bold">@Model.ProgramToApply.Title</h3>
+                <div class="mb-4 mt-2">
+                    <span class="badge bg-secondary me-2">@Model.ProgramToApply.Type</span>
+                    <span class="badge bg-success">Fee: ₹@Model.ProgramToApply.BaseFee.ToString("0.00")</span>
+                    <span class="badge bg-info text-dark ms-2"><i class="bi bi-calendar-event me-1"></i> @Model.ProgramToApply.DurationInDays Days</span>
+                </div>
+
+                <p class="text-muted mb-4">@Model.ProgramToApply.Description</p>
+
+                <hr class="my-4" />
+
+                <h5 class="mb-3">Applying As</h5>
+                <div class="row mb-4 bg-light p-3 rounded">
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Full Name</p>
+                        <p class="fw-bold">@Model.CurrentProfile.FullName</p>
+
+                        <p class="mb-1 text-muted small mt-2">College / University</p>
+                        <p class="fw-bold mb-0">@Model.CurrentProfile.CollegeName</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-1 text-muted small">Degree</p>
+                        <p class="fw-bold">@Model.CurrentProfile.Degree (Year @Model.CurrentProfile.YearOfStudy)</p>
+
+                        <p class="mb-1 text-muted small mt-2">Current Tech Stack</p>
+                        <p class="fw-bold mb-0">@Model.CurrentProfile.CurrentTechStack</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning border-0 bg-warning bg-opacity-10">
+                    <i class="bi bi-info-circle-fill me-2 text-warning"></i>
+                    By clicking submit, your application will be sent to the Bluelines Tech administration for review. If approved, you will receive a notification on your dashboard to accept the offer and pay the required fees.
+                </div>
+
+                <form method="post">
+                    <div class="d-grid mt-4">
+                        @if (Model.HasAlreadyApplied)
+                        {
+                            <button class="btn btn-secondary btn-lg" disabled>You have already applied for this program</button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-primary btn-lg">Submit Application</button>
+                        }
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

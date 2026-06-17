@@ -1,0 +1,153 @@
+﻿@page
+@model BluelinesPortal.Pages.Admin.Applications.IndexModel
+@{
+    ViewData["Title"] = "Application Triage";
+}
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+
+    .filter-btn {
+        border-radius: 50px;
+        font-weight: 600;
+        padding: 0.5rem 1.5rem;
+        color: #4a5568;
+        background: transparent;
+        border: 1px solid transparent;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+        .filter-btn:hover {
+            background: #f8f9fa;
+            color: #0d6efd;
+        }
+
+        .filter-btn.active {
+            background: #0d6efd;
+            color: white;
+            box-shadow: 0 4px 10px rgba(13, 110, 253, 0.2);
+        }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Application Triage</h2>
+        <p class="text-muted small">Review incoming student applications and issue enrollment offers.</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-4 border-0 bg-success bg-opacity-10 text-success fw-bold" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="glass-card mb-4 p-3 d-flex flex-wrap gap-2">
+    <a asp-page="./Index" asp-route-StatusFilter="" class="filter-btn @(!Model.StatusFilter.HasValue ? "active" : "")">All</a>
+    <a asp-page="./Index" asp-route-StatusFilter="Pending" class="filter-btn @(Model.StatusFilter == BluelinesPortal.Models.ApplicationStatus.Pending ? "active" : "")">Pending Inbox</a>
+    <a asp-page="./Index" asp-route-StatusFilter="Approved" class="filter-btn @(Model.StatusFilter == BluelinesPortal.Models.ApplicationStatus.Approved ? "active" : "")">Awaiting Payment</a>
+    <a asp-page="./Index" asp-route-StatusFilter="Enrolled" class="filter-btn @(Model.StatusFilter == BluelinesPortal.Models.ApplicationStatus.Enrolled ? "active" : "")">Active Students</a>
+</div>
+
+<div class="glass-card overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Applicant Profile</th>
+                    <th>Program Requested</th>
+                    <th>Date Applied</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Quick Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Applications.Any())
+                {
+                    foreach (var app in Model.Applications)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark mb-0">@app.Student.FullName</div>
+                                <div class="small text-primary fw-bold mb-1">@(app.Student.StudentId ?? "PENDING")</div>
+
+                                <div class="small text-muted"><i class="bi bi-telephone me-1"></i> @app.Student.PhoneNumber</div>
+                                <div class="small text-muted"><i class="bi bi-building me-1"></i> @app.Student.CollegeName</div>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-primary">@app.Program.Title</span>
+                                <div class="small text-muted">@app.Program.Type</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold">@app.AppliedOn.ToString("dd MMM yyyy")</div>
+                                <div class="small text-muted">@app.AppliedOn.ToString("hh:mm tt")</div>
+                            </td>
+                            <td>
+                                @switch (app.Status)
+                                {
+                                    case BluelinesPortal.Models.ApplicationStatus.Pending:
+                                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><i class="bi bi-hourglass-split me-1"></i> Pending</span>
+                                        break;
+                                    case BluelinesPortal.Models.ApplicationStatus.UnderReview:
+                                        <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><i class="bi bi-eye me-1"></i> Reviewing</span>
+                                        break;
+                                    case BluelinesPortal.Models.ApplicationStatus.Approved:
+                                        <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bi bi-check-circle me-1"></i> Approved (Unpaid)</span>
+                                        break;
+                                    case BluelinesPortal.Models.ApplicationStatus.Enrolled:
+                                        <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="bi bi-rocket-takeoff me-1"></i> Enrolled</span>
+                                        break;
+                                    case BluelinesPortal.Models.ApplicationStatus.Rejected:
+                                        <span class="badge bg-danger px-3 py-2 rounded-pill"><i class="bi bi-x-circle me-1"></i> Rejected</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                @if (app.Status == BluelinesPortal.Models.ApplicationStatus.Pending || app.Status == BluelinesPortal.Models.ApplicationStatus.UnderReview)
+                                {
+                                    <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
+                                        <input type="hidden" name="id" value="@app.Id" />
+                                        <input type="hidden" name="newStatus" value="Approved" />
+                                        <button type="submit" class="btn btn-sm btn-success fw-bold shadow-sm rounded-pill px-3 me-1">Approve</button>
+                                    </form>
+
+                                    <form method="post" asp-page-handler="UpdateStatus" class="d-inline">
+                                        <input type="hidden" name="id" value="@app.Id" />
+                                        <input type="hidden" name="newStatus" value="Rejected" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3">Reject</button>
+                                    </form>
+                                }
+                                else if (app.Status == BluelinesPortal.Models.ApplicationStatus.Approved)
+                                {
+                                    <a asp-page="/Admin/Finance/ManualEntry" class="btn btn-sm btn-primary fw-bold shadow-sm rounded-pill px-3"><i class="bi bi-cash me-1"></i> Log Payment</a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small"><i class="bi bi-check2-all"></i> Processed</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-4 d-block mb-3 opacity-50"></i>
+                            No applications found for this status.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,117 @@
+﻿@page
+@model BluelinesPortal.Pages.Admin.Programs.IndexModel
+@{
+    ViewData["Title"] = "Manage Programs";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-0">Program Catalog</h2>
+        <p class="text-muted small">Manage courses, internships, and projects.</p>
+    </div>
+    <a asp-page="Create" class="btn btn-primary fw-bold shadow-sm">
+        <i class="bi bi-plus-lg me-1"></i> Add New Program
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label text-muted small fw-bold text-uppercase">Search</label>
+                <input type="text" asp-for="SearchString" class="form-control" placeholder="Search by title or keyword..." />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small fw-bold text-uppercase">Filter by Type</label>
+                <select asp-for="TypeFilter" class="form-select" asp-items="Html.GetEnumSelectList<BluelinesPortal.Models.ProgramType>()">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-dark w-100 fw-bold"><i class="bi bi-search me-2"></i> Filter Results</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-4">Image</th>
+                    <th><a asp-route-SortOrder="@ViewData["TitleSort"]" asp-route-SearchString="@Model.SearchString" class="text-dark text-decoration-none">Program Title <i class="bi bi-arrow-down-up small text-muted"></i></a></th>
+                    <th>Type</th>
+                    <th><a asp-route-SortOrder="@ViewData["FeeSort"]" asp-route-SearchString="@Model.SearchString" class="text-dark text-decoration-none">Fee (₹) <i class="bi bi-arrow-down-up small text-muted"></i></a></th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Programs.Any())
+                {
+                    foreach (var item in Model.Programs)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                @if (!string.IsNullOrEmpty(item.ThumbnailPath))
+                                {
+                                    <img src="@item.ThumbnailPath" alt="Thumb" class="rounded object-fit-cover" width="50" height="50" />
+                                }
+                                else
+                                {
+                                    <div class="bg-secondary bg-opacity-10 rounded d-flex align-items-center justify-content-center text-muted" style="width:50px; height:50px;"><i class="bi bi-image"></i></div>
+                                }
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">@item.Title</div>
+                                <div class="small text-muted text-truncate" style="max-width: 250px;">@item.ShortDescription</div>
+                            </td>
+                            <td><span class="badge bg-primary bg-opacity-10 text-primary">@item.Type</span></td>
+                            <td class="fw-bold">@(item.BaseFee > 0 ? $"₹{item.BaseFee:N2}" : "Free")</td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Active</span>
+                                }
+                                else
+                                {
+
+                                    <span class="badge bg-danger"><i class="bi bi-eye-slash me-1"></i> Hidden</span>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-light border me-1" title="Edit"><i class="bi bi-pencil"></i></a>
+                                <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-light border text-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr><td colspan="6" class="text-center py-5 text-muted">No programs found matching your criteria.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white py-3">
+            <ul class="pagination justify-content-center mb-0">
+                <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" asp-route-CurrentPage="@(Model.CurrentPage - 1)" asp-route-SearchString="@Model.SearchString" asp-route-TypeFilter="@Model.TypeFilter">Previous</a>
+                </li>
+                @for (int i = 1; i <= Model.TotalPages; i++)
+                {
+                    <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                        <a class="page-link" asp-route-CurrentPage="@i" asp-route-SearchString="@Model.SearchString" asp-route-TypeFilter="@Model.TypeFilter">@i</a>
+                    </li>
+                }
+                <li class="page-item @(Model.CurrentPage == Model.TotalPages ? "disabled" : "")">
+                    <a class="page-link" asp-route-CurrentPage="@(Model.CurrentPage + 1)" asp-route-SearchString="@Model.SearchString" asp-route-TypeFilter="@Model.TypeFilter">Next</a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>
