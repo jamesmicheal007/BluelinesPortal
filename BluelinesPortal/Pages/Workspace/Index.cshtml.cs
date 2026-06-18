@@ -1,4 +1,4 @@
-using BluelinesPortal.Data;
+﻿using BluelinesPortal.Data;
 using BluelinesPortal.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -65,6 +65,9 @@ namespace BluelinesPortal.Pages.Workspace
 
         public async Task<IActionResult> OnPostAsync()
         {
+            // 💡 FIX: Tell ASP.NET to ignore the missing Application object
+            ModelState.Remove("NewSubmission.Application");
+
             if (!ModelState.IsValid)
             {
                 return await OnGetAsync(NewSubmission.StudentApplicationId); // Reload page on validation error

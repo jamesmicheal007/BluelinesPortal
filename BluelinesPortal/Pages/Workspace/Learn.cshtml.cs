@@ -20,58 +20,34 @@ namespace BluelinesPortal.Pages.Workspace
             _userManager = userManager;
         }
 
-        public ProgramItem ActiveProgram { get; set; }
-        public List<Module> Curriculum { get; set; }
-        public Lesson CurrentLesson { get; set; }
+        public StudentApplication ActiveApplication { get; set; }
+        public IList<ProjectMaterial> CourseMaterials { get; set; }
+        public bool IsFullyPaid { get; set; }
 
-        public bool IsEnrolled { get; set; }
-        public bool HasAccessToCurrentLesson { get; set; }
-
-        public async Task<IActionResult> OnGetAsync(int programId, int? lessonId)
+        public async Task<IActionResult> OnGetAsync(int programId)
         {
             var userId = _userManager.GetUserId(User);
             var profile = await _context.StudentProfiles.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
 
             if (profile == null) return RedirectToPage("/Student/ProfileSetup");
 
-            // 1. Fetch the Program and its full Syllabus
-            ActiveProgram = await _context.Programs.FirstOrDefaultAsync(p => p.Id == programId);
-            if (ActiveProgram == null) return NotFound();
+            // --- FIX: Using the newly renamed ProgramItemId ---
+            ActiveApplication = await _context.Applications
+                .Include(a => a.Program)
+                .FirstOrDefaultAsync(a => a.StudentProfileId == profile.Id
+                                       && a.ProgramItemId == programId
+                                       && (a.Status == ApplicationStatus.Enrolled || a.Status == ApplicationStatus.Approved));
 
-            Curriculum = await _context.Modules
-                .Include(m => m.Lessons.OrderBy(l => l.OrderIndex))
+            if (ActiveApplication == null) return RedirectToPage("/Dashboard/Index");
+
+            // Check if they have full access
+            IsFullyPaid = ActiveApplication.Status == ApplicationStatus.Enrolled;
+
+            // Fetch the downloadable assets
+            CourseMaterials = await _context.ProjectMaterials
                 .Where(m => m.ProgramItemId == programId)
-                .OrderBy(m => m.OrderIndex)
+                .OrderBy(m => m.AssetType)
                 .ToListAsync();
-
-            // 2. Security Check: Is the student actually enrolled/paid?
-            IsEnrolled = await _context.Applications.AnyAsync(a =>
-                a.StudentProfileId == profile.Id &&
-                a.ProgramItemId == programId &&
-                a.Status == ApplicationStatus.Enrolled);
-
-            // 3. Determine which lesson to display
-            if (lessonId.HasValue)
-            {
-                CurrentLesson = await _context.Lessons.FirstOrDefaultAsync(l => l.Id == lessonId.Value);
-            }
-            else if (Curriculum.Any() && Curriculum.First().Lessons.Any())
-            {
-                CurrentLesson = Curriculum.First().Lessons.First(); // Default to first lesson
-            }
-
-            // 4. Content Access Logic
-            if (CurrentLesson != null)
-            {
-                HasAccessToCurrentLesson = IsEnrolled || CurrentLesson.IsFreePreview;
-
-                // Scrub the premium content if they don't have access so it can't be scraped
-                if (!HasAccessToCurrentLesson)
-                {
-                    CurrentLesson.VideoUrl = null;
-                    CurrentLesson.Content = "Premium content locked.";
-                }
-            }
 
             return Page();
         }

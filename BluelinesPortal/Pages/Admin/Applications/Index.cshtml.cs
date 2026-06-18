@@ -87,8 +87,16 @@ namespace BluelinesPortal.Pages.Admin.Applications
                                     </div>
                                 </div>
                             </div>";
-
-                        await _emailService.SendEmailAsync(secureEmail, application.Student.FullName, subject, htmlMessage);
+                        try
+                        {
+                            await _emailService.SendEmailAsync(secureEmail, application.Student.FullName, subject, htmlMessage);
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the error (optional), but allow the page to continue executing
+                            Console.WriteLine($"Email failed to send to {secureEmail}: {ex.Message}");
+                            TempData["WarningMessage"] = "Action saved, but the notification email failed to send.";
+                        }
                     }
                 }
             }

@@ -54,6 +54,15 @@ namespace BluelinesPortal.Pages.Admin.Finance
         {
             if ((NewPayment.PaymentMethod == "GPay" || NewPayment.PaymentMethod == "Account Transfer") && PaymentScreenshot != null)
             {
+                // 1. White-list allowed extensions
+                var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".pdf", ".webp" };
+                var extension = Path.GetExtension(PaymentScreenshot.FileName).ToLowerInvariant();
+
+                if (!allowedExtensions.Contains(extension))
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid file type. Only JPG, PNG, and PDF are allowed.");
+                    return Page(); // Halt execution
+                }
                 var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "receipts");
                 if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 

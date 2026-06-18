@@ -1,67 +1,187 @@
-﻿@page "{id:int}"
+﻿@page "{programId:int}"
 @model BluelinesPortal.Pages.Student.ApplyModel
 @{
     ViewData["Title"] = "Apply for Program";
 }
 
-<div class="row justify-content-center mt-4 mb-5">
-    <div class="col-md-8 col-lg-7">
-        <a asp-page="/Programs/OpportunityBoard" class="text-decoration-none mb-3 d-inline-block">
-            <i class="bi bi-arrow-left"></i> Back to Programs
-        </a>
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+</style>
 
-        <div class="card shadow-lg border-0 rounded-3">
-            <div class="card-header bg-primary text-white p-4">
-                <h4 class="mb-0">Application Confirmation</h4>
-            </div>
-            <div class="card-body p-4 p-md-5">
-                <h3 class="text-primary fw-bold">@Model.ProgramToApply.Title</h3>
-                <div class="mb-4 mt-2">
-                    <span class="badge bg-secondary me-2">@Model.ProgramToApply.Type</span>
-                    <span class="badge bg-success">Fee: ₹@Model.ProgramToApply.BaseFee.ToString("0.00")</span>
-                    <span class="badge bg-info text-dark ms-2"><i class="bi bi-calendar-event me-1"></i> @Model.ProgramToApply.DurationInDays Days</span>
+<div class="mb-4">
+    <a asp-page="/Dashboard/Index" class="btn btn-light border shadow-sm rounded-pill px-3 fw-bold mb-3"><i class="bi bi-arrow-left me-1"></i> Back to Dashboard</a>
+    <h2 class="fw-bold mb-0">Application Form</h2>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-lg-4">
+        <div class="glass-card p-4 border-top border-primary border-4 mb-4 position-sticky" style="top: 2rem;">
+            <h5 class="fw-bold text-dark mb-1">@Model.ProgramDetails.Title</h5>
+            <span class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill">@Model.ProgramDetails.Type</span>
+
+            <p class="text-muted small mb-4">@Model.ProgramDetails.ShortDescription</p>
+
+            <ul class="list-group list-group-flush mb-4 small border-bottom pb-3">
+                <li class="list-group-item bg-transparent px-0 d-flex justify-content-between align-items-center border-0 pb-1">
+                    <span class="text-muted"><i class="bi bi-calendar3 me-2"></i> Duration</span>
+                    <span class="fw-bold">@Model.ProgramDetails.DurationInDays Days</span>
+                </li>
+            </ul>
+
+            <div class="bg-light p-3 rounded-3 border">
+                <h6 class="fw-bold text-uppercase small text-muted mb-3">Financial Overview</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">Standard Fee</span>
+                    <span class="fw-bold text-dark">₹@Model.ProgramDetails.BaseFee.ToString("N2")</span>
                 </div>
 
-                <p class="text-muted mb-4">@Model.ProgramToApply.Description</p>
-
-                <hr class="my-4" />
-
-                <h5 class="mb-3">Applying As</h5>
-                <div class="row mb-4 bg-light p-3 rounded">
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted small">Full Name</p>
-                        <p class="fw-bold">@Model.CurrentProfile.FullName</p>
-
-                        <p class="mb-1 text-muted small mt-2">College / University</p>
-                        <p class="fw-bold mb-0">@Model.CurrentProfile.CollegeName</p>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="mb-1 text-muted small">Degree</p>
-                        <p class="fw-bold">@Model.CurrentProfile.Degree (Year @Model.CurrentProfile.YearOfStudy)</p>
-
-                        <p class="mb-1 text-muted small mt-2">Current Tech Stack</p>
-                        <p class="fw-bold mb-0">@Model.CurrentProfile.CurrentTechStack</p>
-                    </div>
-                </div>
-
-                <div class="alert alert-warning border-0 bg-warning bg-opacity-10">
-                    <i class="bi bi-info-circle-fill me-2 text-warning"></i>
-                    By clicking submit, your application will be sent to the Bluelines Tech administration for review. If approved, you will receive a notification on your dashboard to accept the offer and pay the required fees.
-                </div>
-
-                <form method="post">
-                    <div class="d-grid mt-4">
-                        @if (Model.HasAlreadyApplied)
-                        {
-                            <button class="btn btn-secondary btn-lg" disabled>You have already applied for this program</button>
-                        }
-                        else
-                        {
-                            <button type="submit" class="btn btn-primary btn-lg">Submit Application</button>
-                        }
-                    </div>
-                </form>
+                @if (Model.ProgramDetails.IsDiscountActive)
+                {
+                    if (string.IsNullOrEmpty(Model.ProgramDetails.CouponCode))
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-2 text-success">
+                            <span class="fw-bold"><i class="bi bi-tags-fill me-1"></i> Auto-Discount!</span>
+                            <span>
+                                @(Model.ProgramDetails.DiscountType == BluelinesPortal.Models.DiscountType.Percentage ? $"-{Model.ProgramDetails.DiscountValue}%" : $"-₹{Model.ProgramDetails.DiscountValue}")
+                            </span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-0 text-primary">
+                            <span class="small fw-bold"><i class="bi bi-ticket-perforated me-1"></i> Promo Available</span>
+                        </div>
+                    }
+                }
             </div>
         </div>
     </div>
+
+    <div class="col-lg-8">
+        <div class="glass-card p-4 p-lg-5 h-100">
+            <form method="post">
+
+                @if (Model.ProgramDetails.IsDiscountActive && !string.IsNullOrEmpty(Model.ProgramDetails.CouponCode))
+                {
+                    <div class="mb-5 p-4 rounded-4 border border-primary border-opacity-25 bg-primary bg-opacity-10 shadow-sm">
+                        <label asp-for="AppliedCouponCode" class="form-label fw-bold text-primary mb-2"><i class="bi bi-ticket-detailed me-2"></i> Have a Coupon Code?</label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white"><i class="bi bi-tag text-muted"></i></span>
+                            <input asp-for="AppliedCouponCode" class="form-control text-uppercase font-monospace" placeholder="Enter code here..." />
+                        </div>
+                        <span asp-validation-for="AppliedCouponCode" class="text-danger small mt-2 d-block fw-bold"></span>
+                    </div>
+                }
+
+                <h5 class="fw-bold mb-4 border-bottom pb-2">Program Questionnaire</h5>
+                <p class="text-muted small mb-4">This helps us understand you better and tailor the program to your needs. Please answer honestly!</p>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Rate your HTML/CSS <span class="text-danger">*</span></label>
+                        <select asp-for="NewApplication.SkillHtmlCss" class="form-select" required>
+                            <option value="">-- Scale 1 to 5 --</option>
+                            <option value="1">1 - No Knowledge</option>
+                            <option value="2">2 - Beginner</option>
+                            <option value="3">3 - Intermediate</option>
+                            <option value="4">4 - Advanced</option>
+                            <option value="5">5 - Very Confident</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Rate your JavaScript <span class="text-danger">*</span></label>
+                        <select asp-for="NewApplication.SkillJavaScript" class="form-select" required>
+                            <option value="">-- Scale 1 to 5 --</option>
+                            <option value="1">1 - No Knowledge</option>
+                            <option value="2">2 - Beginner</option>
+                            <option value="3">3 - Intermediate</option>
+                            <option value="4">4 - Advanced</option>
+                            <option value="5">5 - Very Confident</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Rate your Python <span class="text-danger">*</span></label>
+                        <select asp-for="NewApplication.SkillPython" class="form-select" required>
+                            <option value="">-- Scale 1 to 5 --</option>
+                            <option value="1">1 - No Knowledge</option>
+                            <option value="2">2 - Beginner</option>
+                            <option value="3">3 - Intermediate</option>
+                            <option value="4">4 - Advanced</option>
+                            <option value="5">5 - Very Confident</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-muted text-uppercase">Rate your SQL / DBs <span class="text-danger">*</span></label>
+                        <select asp-for="NewApplication.SkillSql" class="form-select" required>
+                            <option value="">-- Scale 1 to 5 --</option>
+                            <option value="1">1 - No Knowledge</option>
+                            <option value="2">2 - Beginner</option>
+                            <option value="3">3 - Intermediate</option>
+                            <option value="4">4 - Advanced</option>
+                            <option value="5">5 - Very Confident</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="NewApplication.ProjectDescription" class="form-label fw-bold small text-muted text-uppercase">Have you ever built a small project?</label>
+                    <textarea asp-for="NewApplication.ProjectDescription" class="form-control" rows="2" placeholder="If yes, please describe it in one sentence..."></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="NewApplication.ProblemSolvingApproach" class="form-label fw-bold small text-muted text-uppercase">When you get stuck, what do you usually do? <span class="text-danger">*</span></label>
+                    <select asp-for="NewApplication.ProblemSolvingApproach" class="form-select" required>
+                        <option value="">-- Choose your approach --</option>
+                        <option value="Search on Google / YouTube">Search on Google / YouTube</option>
+                        <option value="Ask a friend or teacher">Ask a friend or teacher for help</option>
+                        <option value="Read official documentation">Read a book or official documentation</option>
+                        <option value="Keep trying different things">Keep trying different things until it works</option>
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="NewApplication.TechInterests" class="form-label fw-bold small text-muted text-uppercase">What part of technology excites you the most?</label>
+                    <input asp-for="NewApplication.TechInterests" class="form-control" placeholder="e.g., websites, mobile apps, AI, data science, cybersecurity" />
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="NewApplication.MainGoal" class="form-label fw-bold small text-muted text-uppercase">What is the #1 thing you hope to achieve here? <span class="text-danger">*</span></label>
+                    <input asp-for="NewApplication.MainGoal" class="form-control" required />
+                </div>
+
+                <div class="mb-4 bg-light p-3 rounded border">
+                    <label class="form-label fw-bold small text-muted text-uppercase d-block mb-2">Will you be bringing your own laptop? <span class="text-danger">*</span></label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="NewApplication.HasLaptop" value="true" required>
+                        <label class="form-check-label fw-bold text-dark">Yes, I have a laptop</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="NewApplication.HasLaptop" value="false" required>
+                        <label class="form-check-label fw-bold text-dark">No, I need a desktop</label>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <label asp-for="NewApplication.InternshipExpectations" class="form-label fw-bold small text-muted text-uppercase">What are your overall expectations?</label>
+                    <textarea asp-for="NewApplication.InternshipExpectations" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-pill shadow-sm py-3">
+                        Submit Application & Lock Pricing <i class="bi bi-shield-check ms-2"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -20,5 +20,6 @@ namespace BluelinesPortal.Data
         public DbSet<Certificate> Certificates { get; set; }
         public DbSet<Module> Modules { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<ProjectMaterial> ProjectMaterials { get; set; }
     }
 }

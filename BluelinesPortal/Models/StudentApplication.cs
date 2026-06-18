@@ -38,5 +38,9 @@ namespace BluelinesPortal.Models
         public bool HasLaptop { get; set; }
 
         public string? InternshipExpectations { get; set; }
+
+        // Lock in the price at the exact moment of application
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal FinalFee { get; set; }
     }
 }

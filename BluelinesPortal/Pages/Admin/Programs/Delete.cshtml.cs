@@ -38,16 +38,14 @@ namespace BluelinesPortal.Pages.Admin.Programs
 
         public async Task<IActionResult> OnPostAsync(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             DeleteProgram = await _context.Programs.FindAsync(id);
 
             if (DeleteProgram != null)
             {
-                _context.Programs.Remove(DeleteProgram);
+                // SOFT DELETE: Never physically remove a program with active students
+                DeleteProgram.IsActive = false;
                 await _context.SaveChangesAsync();
             }
 

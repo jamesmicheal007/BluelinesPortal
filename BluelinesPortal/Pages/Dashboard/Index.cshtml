@@ -163,13 +163,20 @@
                                         }
                                     </td>
                                     <td class="pe-4 text-end">
+                                        @if (app.Status == BluelinesPortal.Models.ApplicationStatus.Approved || app.Status == BluelinesPortal.Models.ApplicationStatus.Enrolled)
+                                        {
+                                            <a asp-page="/Student/MakePayment" asp-route-applicationId="@app.Id" class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 shadow-sm me-1 mb-1">
+                                                <i class="bi bi-cash me-1"></i> Fees
+                                            </a>
+                                        }
+
                                         @if (app.Status == BluelinesPortal.Models.ApplicationStatus.Approved)
                                         {
-                                            <a asp-page="/Student/AcceptOffer" asp-route-id="@app.Id" class="btn btn-sm btn-success fw-bold rounded-pill px-3 shadow-sm">View Offer</a>
+                                            <a asp-page="/Student/AcceptOffer" asp-route-id="@app.Id" class="btn btn-sm btn-dark fw-bold rounded-pill px-3 shadow-sm mb-1">Offer</a>
                                         }
                                         else if (app.Status == BluelinesPortal.Models.ApplicationStatus.Enrolled)
                                         {
-                                            <a asp-page="/Workspace/Index" asp-route-id="@app.Id" class="btn btn-sm btn-gradient fw-bold rounded-pill px-3 shadow-sm">Workspace <i class="bi bi-arrow-right ms-1"></i></a>
+                                            <a asp-page="/Workspace/Index" asp-route-id="@app.Id" class="btn btn-sm btn-gradient fw-bold rounded-pill px-3 shadow-sm mb-1">Workspace <i class="bi bi-arrow-right ms-1"></i></a>
                                         }
                                         else
                                         {

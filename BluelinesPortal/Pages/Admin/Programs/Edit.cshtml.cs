@@ -20,8 +20,8 @@ namespace BluelinesPortal.Pages.Admin.Programs
         }
 
         [BindProperty] public ProgramItem EditProgram { get; set; }
-        [BindProperty] public IFormFile ThumbnailUpload { get; set; }
-        [BindProperty] public IFormFile BrochureUpload { get; set; }
+        [BindProperty] public IFormFile? ThumbnailUpload { get; set; }
+        [BindProperty] public IFormFile? BrochureUpload { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -36,35 +36,51 @@ namespace BluelinesPortal.Pages.Admin.Programs
             var programToUpdate = await _context.Programs.FindAsync(EditProgram.Id);
             if (programToUpdate == null) return NotFound();
 
-            // 1. Handle File Uploads (Only replace if a new file is selected)
-            if (ThumbnailUpload != null)
+            // --- PRICING & DISCOUNT SYNC ---
+            programToUpdate.BaseFee = EditProgram.BaseFee;
+            programToUpdate.IsDiscountActive = EditProgram.IsDiscountActive;
+
+            if (!EditProgram.IsDiscountActive)
             {
-                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "programs", "images");
-                Directory.CreateDirectory(uploadsFolder);
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + ThumbnailUpload.FileName;
-                using (var fileStream = new FileStream(Path.Combine(uploadsFolder, uniqueFileName), FileMode.Create)) { await ThumbnailUpload.CopyToAsync(fileStream); }
-                programToUpdate.ThumbnailPath = "/uploads/programs/images/" + uniqueFileName;
+                programToUpdate.DiscountType = DiscountType.None;
+                programToUpdate.DiscountValue = 0;
+                programToUpdate.CouponCode = null;
+            }
+            else
+            {
+                programToUpdate.DiscountType = EditProgram.DiscountType;
+                programToUpdate.DiscountValue = EditProgram.DiscountValue;
+                programToUpdate.CouponCode = string.IsNullOrWhiteSpace(EditProgram.CouponCode) ? null : EditProgram.CouponCode.Trim().ToUpper();
             }
 
-            if (BrochureUpload != null)
-            {
-                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads", "programs", "brochures");
-                Directory.CreateDirectory(uploadsFolder);
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + BrochureUpload.FileName;
-                using (var fileStream = new FileStream(Path.Combine(uploadsFolder, uniqueFileName), FileMode.Create)) { await BrochureUpload.CopyToAsync(fileStream); }
-                programToUpdate.BrochurePath = "/uploads/programs/brochures/" + uniqueFileName;
-            }
-
-            // 2. Update Text Fields
+            // --- STANDARD UPDATES ---
             programToUpdate.Title = EditProgram.Title;
             programToUpdate.ShortDescription = EditProgram.ShortDescription;
             programToUpdate.Description = EditProgram.Description;
             programToUpdate.Type = EditProgram.Type;
             programToUpdate.DurationInDays = EditProgram.DurationInDays;
-            programToUpdate.BaseFee = EditProgram.BaseFee;
             programToUpdate.IsActive = EditProgram.IsActive;
             programToUpdate.YouTubeVideoUrl = EditProgram.YouTubeVideoUrl;
             programToUpdate.Prerequisites = EditProgram.Prerequisites;
+
+            // --- FILE UPLOADS ---
+            if (ThumbnailUpload != null)
+            {
+                string folder = Path.Combine(_env.WebRootPath, "uploads", "programs", "images");
+                Directory.CreateDirectory(folder);
+                string fileName = Guid.NewGuid().ToString("N") + Path.GetExtension(ThumbnailUpload.FileName);
+                using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create)) { await ThumbnailUpload.CopyToAsync(stream); }
+                programToUpdate.ThumbnailPath = "/uploads/programs/images/" + fileName;
+            }
+
+            if (BrochureUpload != null)
+            {
+                string folder = Path.Combine(_env.WebRootPath, "uploads", "programs", "brochures");
+                Directory.CreateDirectory(folder);
+                string fileName = Guid.NewGuid().ToString("N") + Path.GetExtension(BrochureUpload.FileName);
+                using (var stream = new FileStream(Path.Combine(folder, fileName), FileMode.Create)) { await BrochureUpload.CopyToAsync(stream); }
+                programToUpdate.BrochurePath = "/uploads/programs/brochures/" + fileName;
+            }
 
             await _context.SaveChangesAsync();
             return RedirectToPage("./Index");

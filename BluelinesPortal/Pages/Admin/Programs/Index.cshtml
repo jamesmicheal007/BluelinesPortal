@@ -83,6 +83,9 @@
                             <td class="text-end pe-4">
                                 <a asp-page="./Edit" asp-route-id="@item.Id" class="btn btn-sm btn-light border me-1" title="Edit"><i class="bi bi-pencil"></i></a>
                                 <a asp-page="./Delete" asp-route-id="@item.Id" class="btn btn-sm btn-light border text-danger" title="Delete"><i class="bi bi-trash"></i></a>
+                                <a asp-page="./Materials" asp-route-id="@item.Id" class="btn btn-sm btn-info text-dark shadow-sm rounded-pill fw-bold" title="Manage Materials">
+                                    <i class="bi bi-folder-fill"></i> Assets
+                                </a>
                             </td>
                         </tr>
                     }

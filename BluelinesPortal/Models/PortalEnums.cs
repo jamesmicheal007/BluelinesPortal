@@ -10,12 +10,32 @@
         TechnicalTuition
     }
 
+    public enum DiscountType
+    {
+        None,
+        Percentage,
+        FixedAmount
+    }
+
+    public enum ProjectAssetType
+    {
+        Abstract,
+        PowerPoint,
+        ReviewDocument,
+        FinalDocument,
+        SourceCode,
+        Screenshots,
+        HowToRunVideo,
+        IntroVideo,
+        Other
+    }
+
     public enum ApplicationStatus
     {
-        Pending,       // Student just applied
-        UnderReview,   // Admin is checking
-        Approved,      // Offer extended
-        Rejected,      // Not accepted
-        Enrolled       // Fee paid, active student
+        Pending,
+        UnderReview,
+        Approved,
+        Enrolled,
+        Rejected
     }
 }

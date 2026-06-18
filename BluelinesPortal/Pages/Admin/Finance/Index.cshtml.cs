@@ -1,4 +1,4 @@
-using BluelinesPortal.Data;
+﻿using BluelinesPortal.Data;
 using BluelinesPortal.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -80,6 +80,37 @@ namespace BluelinesPortal.Pages.Admin.Finance
                 .Skip((CurrentPage - 1) * PageSize)
                 .Take(PageSize)
                 .ToListAsync();
+        }
+        public async Task<IActionResult> OnPostVerifyPaymentAsync(int paymentId, string action)
+        {
+            var payment = await _context.Payments
+                .Include(p => p.Application)
+                .FirstOrDefaultAsync(p => p.Id == paymentId);
+
+            if (payment != null && payment.PaymentStatus == "PendingVerification")
+            {
+                if (action == "Approve")
+                {
+                    payment.PaymentStatus = "Success";
+
+                    // Auto-enroll the student if this payment clears their balance or moves them from Approved
+                    if (payment.Application.Status == ApplicationStatus.Approved)
+                    {
+                        payment.Application.Status = ApplicationStatus.Enrolled;
+                    }
+
+                    TempData["SuccessMessage"] = $"Payment of ₹{payment.AmountPaid} verified. Student enrolled.";
+                }
+                else if (action == "Reject")
+                {
+                    payment.PaymentStatus = "Rejected";
+                    TempData["SuccessMessage"] = "Payment proof rejected.";
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            return RedirectToPage(new { SearchString = SearchString, SortOrder = SortOrder, CurrentPage = CurrentPage });
         }
     }
 }

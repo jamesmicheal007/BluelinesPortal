@@ -105,7 +105,7 @@
                 {
                     foreach (var payment in Model.RecentPayments)
                     {
-                        <tr>
+                        <tr class="@(payment.PaymentStatus == "PendingVerification" ? "bg-warning bg-opacity-10" : "")">
                             <td class="ps-4">
                                 <div class="fw-bold text-dark">@payment.PaymentDate.ToString("dd MMM yyyy")</div>
                                 <div class="small text-muted">@payment.PaymentDate.ToString("hh:mm tt")</div>
@@ -113,25 +113,52 @@
                             <td>
                                 <div class="fw-bold">@payment.Application.Student.FullName</div>
                                 <div class="small text-primary fw-bold">@payment.Application.Student.StudentId</div>
-
-                                <div class="small text-muted">App ID: #@payment.Application.Id</div>
                             </td>
                             <td>
-                                <div class="fw-bold text-primary">@payment.Application.Program.Title</div>
-                                <code>@payment.PaymentGatewayReference</code>
+                                <div class="fw-bold text-dark">@payment.Application.Program.Title</div>
+                                <code class="text-muted">@payment.PaymentGatewayReference</code>
                             </td>
-                            <td class="text-end fw-bold text-success">
+                            <td class="text-end fw-bold @(payment.PaymentStatus == "Success" ? "text-success" : "text-dark")">
                                 ₹@payment.AmountPaid.ToString("N2")
+                                @if (payment.PaymentStatus == "PendingVerification")
+                                {
+                                    <div class="small text-warning mt-1"><i class="bi bi-clock-history"></i> Needs Review</div>
+                                }
+                                else if (payment.PaymentStatus == "Rejected")
+                                {
+                                    <div class="small text-danger mt-1"><i class="bi bi-x-circle"></i> Rejected</div>
+                                }
                             </td>
                             <td class="text-end pe-4">
-                                <div class="btn-group shadow-sm">
-                                    <a asp-page="./Receipt" asp-route-id="@payment.Id" class="btn btn-sm btn-light border text-primary" title="View Web Receipt">
-                                        <i class="bi bi-eye-fill"></i>
-                                    </a>
-                                    <a asp-page="./Receipt" asp-page-handler="DownloadPdf" asp-route-id="@payment.Id" class="btn btn-sm btn-light border text-danger" title="Download PDF">
-                                        <i class="bi bi-file-earmark-pdf-fill"></i>
-                                    </a>
-                                </div>
+                                @if (payment.PaymentStatus == "PendingVerification")
+                                {
+                                    <div class="d-flex justify-content-end gap-1">
+                                        <a href="@payment.ScreenshotPath" target="_blank" class="btn btn-sm btn-info text-dark fw-bold rounded-pill shadow-sm" title="View Proof">
+                                            <i class="bi bi-eye"></i> Proof
+                                        </a>
+                                        <form method="post" asp-page-handler="VerifyPayment" class="d-inline">
+                                            <input type="hidden" name="paymentId" value="@payment.Id" />
+                                            <input type="hidden" name="action" value="Approve" />
+                                            <button type="submit" class="btn btn-sm btn-success fw-bold rounded-pill shadow-sm" title="Approve"><i class="bi bi-check-lg"></i></button>
+                                        </form>
+                                        <form method="post" asp-page-handler="VerifyPayment" class="d-inline">
+                                            <input type="hidden" name="paymentId" value="@payment.Id" />
+                                            <input type="hidden" name="action" value="Reject" />
+                                            <button type="submit" class="btn btn-sm btn-danger fw-bold rounded-pill shadow-sm" title="Reject"><i class="bi bi-x-lg"></i></button>
+                                        </form>
+                                    </div>
+                                }
+                                else if (payment.PaymentStatus == "Success")
+                                {
+                                    <div class="btn-group shadow-sm">
+                                        <a asp-page="./Receipt" asp-route-id="@payment.Id" class="btn btn-sm btn-light border text-primary" title="View Web Receipt">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </a>
+                                        <a asp-page="./Receipt" asp-page-handler="DownloadPdf" asp-route-id="@payment.Id" class="btn btn-sm btn-light border text-danger" title="Download PDF">
+                                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                                        </a>
+                                    </div>
+                                }
                             </td>
                         </tr>
                     }

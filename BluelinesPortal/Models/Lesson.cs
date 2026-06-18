@@ -12,18 +12,22 @@ namespace BluelinesPortal.Models
         [ForeignKey("ModuleId")]
         public Module Module { get; set; }
 
-        [Required]
-        [StringLength(150)]
-        public string Title { get; set; } // e.g., "Setting up Visual Studio"
+        [Required, StringLength(150)]
+        public string Title { get; set; }
 
-        public string Content { get; set; } // Detailed tutorial text/HTML
+        public string? Content { get; set; } // Text / HTML Content
 
-        [StringLength(255)]
-        public string VideoUrl { get; set; } // YouTube/Vimeo embed URL
+        [StringLength(500)]
+        public string? VideoUrl { get; set; } // YouTube / Embedded Video
+
+        // --- NEW FIELDS FOR ADVANCED ONLINE COURSES ---
+        [StringLength(500)]
+        public string? PdfDocumentPath { get; set; } // Course Notes PDF
+
+        [StringLength(500)]
+        public string? DownloadableAssetPath { get; set; } // ZIP files, starter code, etc.
 
         public int OrderIndex { get; set; }
-
-        // THE FREEMIUM TOGGLE
         public bool IsFreePreview { get; set; } = false;
     }
 }

@@ -14,44 +14,56 @@
 
         <form method="post" enctype="multipart/form-data">
             <div class="row g-4">
-                <div class="col-md-8">
+                <div class="col-md-7">
                     <div class="card border-0 shadow-sm h-100">
                         <div class="card-body p-4">
                             <h5 class="fw-bold mb-4 border-bottom pb-2">Core Details</h5>
 
                             <div class="mb-3">
                                 <label asp-for="NewProgram.Title" class="form-label fw-bold">Program Title</label>
-                                <input asp-for="NewProgram.Title" class="form-control form-control-lg" placeholder="e.g. Full Stack Python React" required />
+                                <input asp-for="NewProgram.Title" class="form-control form-control-lg" required />
                             </div>
 
                             <div class="mb-3">
-                                <label asp-for="NewProgram.ShortDescription" class="form-label fw-bold">Short Catchy Description</label>
-                                <input asp-for="NewProgram.ShortDescription" class="form-control" placeholder="1-2 sentences max..." />
+                                <label asp-for="NewProgram.ShortDescription" class="form-label fw-bold">Short Description</label>
+                                <input asp-for="NewProgram.ShortDescription" class="form-control" />
                             </div>
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label asp-for="NewProgram.YouTubeVideoUrl" class="form-label fw-bold">YouTube Promo URL (Optional)</label>
-                                    <input asp-for="NewProgram.YouTubeVideoUrl" class="form-control" placeholder="https://youtube.com/..." />
+                                    <label asp-for="NewProgram.YouTubeVideoUrl" class="form-label fw-bold">YouTube Promo URL</label>
+                                    <input asp-for="NewProgram.YouTubeVideoUrl" class="form-control" />
                                 </div>
                                 <div class="col-md-6">
                                     <label asp-for="NewProgram.Prerequisites" class="form-label fw-bold">Prerequisites</label>
-                                    <input asp-for="NewProgram.Prerequisites" class="form-control" placeholder="e.g. Basic HTML" />
+                                    <input asp-for="NewProgram.Prerequisites" class="form-control" />
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label asp-for="NewProgram.Description" class="form-label fw-bold">Comprehensive Description</label>
-                                <textarea asp-for="NewProgram.Description" class="form-control" rows="8" placeholder="Full syllabus, expectations, etc..."></textarea>
+                                <textarea asp-for="NewProgram.Description" class="form-control" rows="8"></textarea>
+                            </div>
+
+                            <h5 class="fw-bold mt-5 mb-4 border-bottom pb-2">Media Uploads</h5>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary"><i class="bi bi-image me-1"></i> Thumbnail Image</label>
+                                    <input asp-for="ThumbnailUpload" type="file" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-danger"><i class="bi bi-file-pdf me-1"></i> Brochure (PDF)</label>
+                                    <input asp-for="BrochureUpload" type="file" class="form-control form-control-sm" accept=".pdf" />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-5">
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body p-4">
-                            <h5 class="fw-bold mb-4 border-bottom pb-2">Configuration</h5>
+                            <h5 class="fw-bold mb-4 border-bottom pb-2">Program Configuration</h5>
 
                             <div class="mb-3">
                                 <label asp-for="NewProgram.Type" class="form-label fw-bold text-muted small">PROGRAM TYPE</label>
@@ -60,40 +72,42 @@
                                 </select>
                             </div>
 
-                            <div class="row mb-3">
-                                <div class="col-6">
-                                    <label asp-for="NewProgram.DurationInDays" class="form-label fw-bold text-muted small">DURATION</label>
-                                    <div class="input-group">
-                                        <input asp-for="NewProgram.DurationInDays" class="form-control" type="number" min="1" required />
-                                        <span class="input-group-text">Days</span>
+                            <div class="mb-4">
+                                <label asp-for="NewProgram.DurationInDays" class="form-label fw-bold text-muted small">DURATION (DAYS)</label>
+                                <input asp-for="NewProgram.DurationInDays" class="form-control" type="number" min="1" required />
+                            </div>
+
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="mb-3">
+                                    <label asp-for="NewProgram.BaseFee" class="form-label fw-bold text-dark">Base Fee (₹)</label>
+                                    <input asp-for="NewProgram.BaseFee" class="form-control form-control-lg text-success fw-bold" type="number" step="0.01" min="0" required />
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" asp-for="NewProgram.IsDiscountActive" id="discountToggle">
+                                    <label class="form-check-label fw-bold text-dark" for="discountToggle">Enable Discount Strategy</label>
+                                </div>
+
+                                <div id="discountConfig" style="display: none;">
+                                    <div class="mb-2">
+                                        <label asp-for="NewProgram.DiscountType" class="form-label text-muted small fw-bold">Discount Type</label>
+                                        <select asp-for="NewProgram.DiscountType" class="form-select form-select-sm" asp-items="Html.GetEnumSelectList<DiscountType>()"></select>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label asp-for="NewProgram.DiscountValue" class="form-label text-muted small fw-bold">Value (% or ₹)</label>
+                                        <input asp-for="NewProgram.DiscountValue" class="form-control form-control-sm" type="number" step="0.01" min="0" />
+                                    </div>
+                                    <div class="mb-2">
+                                        <label asp-for="NewProgram.CouponCode" class="form-label text-muted small fw-bold">Coupon Code (Optional)</label>
+                                        <input asp-for="NewProgram.CouponCode" class="form-control form-control-sm font-monospace text-uppercase" placeholder="e.g. DIWALI50" />
+                                        <div class="form-text" style="font-size: 0.7rem;">Leave blank to apply automatically to all students.</div>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <label asp-for="NewProgram.BaseFee" class="form-label fw-bold text-muted small">FEE (₹)</label>
-                                    <input asp-for="NewProgram.BaseFee" class="form-control" type="number" step="0.01" min="0" required />
-                                </div>
                             </div>
 
-                            <div class="form-check form-switch mt-4 bg-light p-3 rounded">
+                            <div class="form-check form-switch mt-4 p-3 bg-primary bg-opacity-10 rounded border border-primary border-opacity-25">
                                 <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" asp-for="NewProgram.IsActive" checked>
-                                <label class="form-check-label fw-bold" asp-for="NewProgram.IsActive">Publicly Visible</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body p-4">
-                            <h5 class="fw-bold mb-4 border-bottom pb-2">Media Uploads</h5>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-primary"><i class="bi bi-image me-1"></i> Thumbnail Image</label>
-                                <input asp-for="ThumbnailUpload" type="file" class="form-control form-control-sm" accept="image/jpeg, image/png, image/webp" />
-                                <div class="form-text">Ratio 16:9 recommended.</div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-danger"><i class="bi bi-file-pdf me-1"></i> Syllabus Brochure (PDF)</label>
-                                <input asp-for="BrochureUpload" type="file" class="form-control form-control-sm" accept="application/pdf" />
+                                <label class="form-check-label fw-bold text-primary" asp-for="NewProgram.IsActive">Publicly Visible</label>
                             </div>
                         </div>
                     </div>
@@ -109,3 +123,27 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggle = document.getElementById("discountToggle");
+            const config = document.getElementById("discountConfig");
+
+            function updateDiscountVisibility() {
+                if (toggle.checked) {
+                    config.style.display = "block";
+                    // Add a tiny animation
+                    config.style.opacity = 0;
+                    setTimeout(() => config.style.opacity = 1, 50);
+                    config.style.transition = "opacity 0.3s ease";
+                } else {
+                    config.style.display = "none";
+                }
+            }
+
+            toggle.addEventListener("change", updateDiscountVisibility);
+            updateDiscountVisibility(); // Run on page load
+        });
+    </script>
+}

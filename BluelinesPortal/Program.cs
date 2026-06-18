@@ -1,7 +1,9 @@
 using BluelinesPortal.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+using QuestPDF.Infrastructure;
+// Explicitly declare the free Community License
+QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.

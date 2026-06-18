@@ -1,0 +1,147 @@
+﻿@page "{id:int}"
+@model BluelinesPortal.Pages.Admin.Programs.MaterialsModel
+@{
+    ViewData["Title"] = "Manage Program Materials";
+}
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+</style>
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <a asp-page="./Index" class="btn btn-light border shadow-sm rounded-pill px-3 fw-bold mb-3"><i class="bi bi-arrow-left me-1"></i> Back to Programs</a>
+        <h2 class="fw-bold mb-0">Asset Manager</h2>
+        <p class="text-muted small">@Model.ProgramDetails.Title (@Model.ProgramDetails.Type)</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 fw-bold">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="row g-4 mb-5">
+
+    <div class="col-lg-4">
+        <div class="glass-card p-4 border-top border-primary border-4 position-sticky" style="top: 2rem;">
+            <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-cloud-arrow-up text-primary me-2"></i> Upload New Asset</h5>
+
+            <form method="post" asp-page-handler="Upload" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="@Model.ProgramDetails.Id" />
+
+                <div class="mb-3">
+                    <label asp-for="NewMaterial.Title" class="form-label fw-bold text-muted small text-uppercase">Asset Title <span class="text-danger">*</span></label>
+                    <input asp-for="NewMaterial.Title" class="form-control" placeholder="e.g. Phase 1 PPT, Complete Source Code" required />
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="NewMaterial.AssetType" class="form-label fw-bold text-muted small text-uppercase">Document Type <span class="text-danger">*</span></label>
+                    <select asp-for="NewMaterial.AssetType" class="form-select" asp-items="Html.GetEnumSelectList<BluelinesPortal.Models.ProjectAssetType>()" required>
+                        <option value="">-- Select Category --</option>
+                    </select>
+                </div>
+
+                <div class="mb-4 p-3 bg-light rounded border">
+                    <label class="form-label fw-bold text-dark small text-uppercase mb-2"><i class="bi bi-file-earmark-zip me-1"></i> Option A: Upload File</label>
+                    <input asp-for="FileUpload" type="file" class="form-control form-control-sm mb-3" />
+
+                    <div class="text-center text-muted small fw-bold mb-3">- OR -</div>
+
+                    <label asp-for="NewMaterial.ExternalUrl" class="form-label fw-bold text-dark small text-uppercase mb-2"><i class="bi bi-link-45deg me-1"></i> Option B: External Link</label>
+                    <input asp-for="NewMaterial.ExternalUrl" class="form-control form-control-sm" placeholder="Google Drive, YouTube, etc." />
+                </div>
+
+                <div class="form-check form-switch mb-4 p-3 bg-warning bg-opacity-10 rounded border border-warning border-opacity-25">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" asp-for="NewMaterial.IsPremium" checked>
+                    <label class="form-check-label fw-bold text-dark" asp-for="NewMaterial.IsPremium">Premium Content</label>
+                    <div class="form-text" style="font-size: 0.75rem;">If checked, only Enrolled (paid) students can download this.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm rounded-pill">
+                    <i class="bi bi-plus-lg me-1"></i> Add Asset to Program
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="glass-card p-4 p-lg-5 h-100">
+            <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-folder2-open text-primary me-2"></i> Program Directory</h5>
+
+            @if (Model.ExistingMaterials.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-3">Type</th>
+                                <th>Asset Details</th>
+                                <th>Access</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var asset in Model.ExistingMaterials)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border border-dark border-opacity-25 rounded-pill px-3 py-2">
+                                            @asset.AssetType
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark">@asset.Title</div>
+                                        @if (!string.IsNullOrEmpty(asset.FilePath))
+                                        {
+                                            <a href="@asset.FilePath" target="_blank" class="small text-decoration-none"><i class="bi bi-download me-1"></i> Hosted File</a>
+                                        }
+                                        else if (!string.IsNullOrEmpty(asset.ExternalUrl))
+                                        {
+                                            <a href="@asset.ExternalUrl" target="_blank" class="small text-decoration-none text-info"><i class="bi bi-box-arrow-up-right me-1"></i> External Link</a>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (asset.IsPremium)
+                                        {
+                                            <span class="text-warning fw-bold small"><i class="bi bi-lock-fill"></i> Paid Only</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success fw-bold small"><i class="bi bi-unlock-fill"></i> Public</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <form method="post" asp-page-handler="Delete" onsubmit="return confirm('Are you sure you want to delete this asset? This cannot be undone.');">
+                                            <input type="hidden" name="materialId" value="@asset.Id" />
+                                            <input type="hidden" name="programId" value="@Model.ProgramDetails.Id" />
+                                            <button type=\"submit\" class="btn btn-sm btn-outline-danger rounded-circle" title="Delete">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-box-seam display-1 text-muted opacity-25 d-block mb-3"></i>
+                    <h5 class="fw-bold text-muted">No Assets Uploaded</h5>
+                    <p class="text-muted small">Use the form on the left to upload source code, PPTs, or videos for this program.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

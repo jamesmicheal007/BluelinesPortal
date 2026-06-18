@@ -1,4 +1,4 @@
-using BluelinesPortal.Data;
+﻿using BluelinesPortal.Data;
 using BluelinesPortal.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,29 +20,23 @@ namespace BluelinesPortal.Pages.Student
             _userManager = userManager;
         }
 
+        // ==========================================
+        // 💡 FIX: Renamed back to 'ApprovedApplication' to match your HTML
+        // ==========================================
         public StudentApplication ApprovedApplication { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        public async Task<IActionResult> OnGetAsync(int id)
         {
-            if (id == null) return NotFound();
-
             var userId = _userManager.GetUserId(User);
-            var profile = await _context.StudentProfiles.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
 
-            if (profile == null) return RedirectToPage("/Student/ProfileSetup");
-
-            // Fetch the specific application, ensuring it belongs to THIS student
             ApprovedApplication = await _context.Applications
                 .Include(a => a.Program)
                 .Include(a => a.Student)
-                .FirstOrDefaultAsync(a => a.Id == id && a.StudentProfileId == profile.Id);
+                .FirstOrDefaultAsync(a => a.Id == id && a.Student.IdentityUserId == userId);
 
-            if (ApprovedApplication == null) return NotFound();
-
-            // Security Check: They can only be here if the admin approved it
-            if (ApprovedApplication.Status != ApplicationStatus.Approved)
+            // Only allow access if the application exists and is currently Approved
+            if (ApprovedApplication == null || ApprovedApplication.Status != ApplicationStatus.Approved)
             {
-                TempData["ErrorMessage"] = "This offer is not valid or has expired.";
                 return RedirectToPage("/Dashboard/Index");
             }
 
@@ -51,39 +45,33 @@ namespace BluelinesPortal.Pages.Student
 
         public async Task<IActionResult> OnPostAsync(int id)
         {
-            // Note: In a production environment, this POST method would redirect 
-            // to Razorpay/Cashfree. We are simulating a successful payment return here.
-
             var userId = _userManager.GetUserId(User);
-            var profile = await _context.StudentProfiles.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
 
-            var applicationToUpdate = await _context.Applications
-                .Include(a => a.Program)
-                .FirstOrDefaultAsync(a => a.Id == id && a.StudentProfileId == profile.Id);
+            var application = await _context.Applications
+                .Include(a => a.Student)
+                .FirstOrDefaultAsync(a => a.Id == id && a.Student.IdentityUserId == userId);
 
-            if (applicationToUpdate == null || applicationToUpdate.Status != ApplicationStatus.Approved)
+            if (application == null || application.Status != ApplicationStatus.Approved)
             {
                 return RedirectToPage("/Dashboard/Index");
             }
 
-            // 1. Update Application Status to Enrolled
-            applicationToUpdate.Status = ApplicationStatus.Enrolled;
-
-            // 2. Generate a Payment Record for the Admin Financial Dashboard
-            var paymentRecord = new PaymentRecord
+            if (application.FinalFee <= 0)
             {
-                StudentApplicationId = applicationToUpdate.Id,
-                AmountPaid = applicationToUpdate.Program.BaseFee,
-                PaymentDate = DateTime.UtcNow,
-                PaymentGatewayReference = "SIM_" + Guid.NewGuid().ToString("N").Substring(0, 10).ToUpper(), // Simulated ID
-                PaymentStatus = "Success"
-            };
+                // SCENARIO A: 100% Scholarship or Free Program
+                // Auto-enroll them immediately
+                application.Status = ApplicationStatus.Enrolled;
+                await _context.SaveChangesAsync();
 
-            _context.Payments.Add(paymentRecord);
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = "Payment successful! Welcome to the program. Your workspace is now unlocked.";
-            return RedirectToPage("/Dashboard/Index");
+                TempData["SuccessMessage"] = "Offer accepted! Since this program is fully covered, you have been instantly enrolled.";
+                return RedirectToPage("/Workspace/Index", new { id = application.Id });
+            }
+            else
+            {
+                // SCENARIO B: Payment is required
+                // Keep status as 'Approved' and send them to the payment gateway
+                return RedirectToPage("/Student/MakePayment", new { applicationId = application.Id });
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-using BluelinesPortal.Data;
+﻿using BluelinesPortal.Data;
 using BluelinesPortal.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,68 +20,117 @@ namespace BluelinesPortal.Pages.Student
             _userManager = userManager;
         }
 
-        public ProgramItem ProgramToApply { get; set; }
+        public ProgramItem ProgramDetails { get; set; }
         public StudentProfile CurrentProfile { get; set; }
-        public bool HasAlreadyApplied { get; set; }
 
-        public async Task<IActionResult> OnGetAsync(int? id)
+        [BindProperty] public StudentApplication NewApplication { get; set; }
+
+        // This grabs the coupon code from the front-end form
+        [BindProperty] public string? AppliedCouponCode { get; set; }
+
+        public async Task<IActionResult> OnGetAsync(int programId)
         {
-            if (id == null) return NotFound();
-
-            // 1. Fetch the active program
-            ProgramToApply = await _context.Programs
-                .FirstOrDefaultAsync(p => p.Id == id && p.IsActive);
-
-            if (ProgramToApply == null) return NotFound();
-
-            // 2. Fetch the logged-in student's profile
             var userId = _userManager.GetUserId(User);
-            CurrentProfile = await _context.StudentProfiles
-                .FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+            CurrentProfile = await _context.StudentProfiles.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
 
-            // Traffic cop: If they bypassed setup, route them back
             if (CurrentProfile == null) return RedirectToPage("/Student/ProfileSetup");
 
-            // 3. Prevent duplicate applications
-            HasAlreadyApplied = await _context.Applications
-                .AnyAsync(a => a.ProgramItemId == id && a.StudentProfileId == CurrentProfile.Id);
+            ProgramDetails = await _context.Programs.FirstOrDefaultAsync(p => p.Id == programId && p.IsActive);
+            if (ProgramDetails == null) return NotFound();
+
+            // Safety Check: Prevent applying for the same program twice
+            var existingApp = await _context.Applications
+                .FirstOrDefaultAsync(a => a.StudentProfileId == CurrentProfile.Id && a.ProgramItemId == programId);
+
+            if (existingApp != null)
+            {
+                TempData["WarningMessage"] = "You have already applied for this program.";
+                return RedirectToPage("/Dashboard/Index");
+            }
 
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync(int id)
+        public async Task<IActionResult> OnPostAsync(int programId)
         {
             var userId = _userManager.GetUserId(User);
-            var profile = await _context.StudentProfiles
-                .FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+            CurrentProfile = await _context.StudentProfiles.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
+            ProgramDetails = await _context.Programs.FirstOrDefaultAsync(p => p.Id == programId);
 
-            if (profile == null) return RedirectToPage("/Student/ProfileSetup");
+            if (CurrentProfile == null || ProgramDetails == null) return NotFound();
 
-            // Double-check on POST to prevent duplicate submission via refresh
-            var existingApp = await _context.Applications
-                .AnyAsync(a => a.ProgramItemId == id && a.StudentProfileId == profile.Id);
+            // ==========================================
+            // 💡 THE SERVER-SIDE PRICING ENGINE
+            // ==========================================
+            decimal calculatedFee = ProgramDetails.BaseFee;
 
-            if (existingApp)
+            if (ProgramDetails.IsDiscountActive)
             {
-                return RedirectToPage("/Dashboard/Index");
+                bool isDiscountValid = false;
+
+                // Scenario A: Discount is Automatic (No coupon code required by admin)
+                if (string.IsNullOrEmpty(ProgramDetails.CouponCode))
+                {
+                    isDiscountValid = true;
+                }
+                // Scenario B: Admin requires a code, and the student typed it correctly
+                else if (!string.IsNullOrEmpty(AppliedCouponCode) &&
+                         AppliedCouponCode.Trim().ToUpper() == ProgramDetails.CouponCode)
+                {
+                    isDiscountValid = true;
+                }
+                // Scenario C: Admin requires a code, but the student typed it WRONG
+                else if (!string.IsNullOrEmpty(AppliedCouponCode))
+                {
+                    ModelState.AddModelError("AppliedCouponCode", "Invalid or expired coupon code.");
+                }
+
+                // If the discount passes validation, apply the math
+                if (isDiscountValid)
+                {
+                    if (ProgramDetails.DiscountType == DiscountType.Percentage)
+                    {
+                        decimal discountAmount = (ProgramDetails.BaseFee * ProgramDetails.DiscountValue) / 100;
+                        calculatedFee = ProgramDetails.BaseFee - discountAmount;
+                    }
+                    else if (ProgramDetails.DiscountType == DiscountType.FixedAmount)
+                    {
+                        calculatedFee = ProgramDetails.BaseFee - ProgramDetails.DiscountValue;
+                    }
+                }
             }
 
-            // Create the new application record
-            var newApplication = new StudentApplication
-            {
-                StudentProfileId = profile.Id,
-                ProgramItemId = id,
-                AppliedOn = DateTime.UtcNow,
-                Status = ApplicationStatus.Pending,
-                AdminNotes = ""
-            };
+            // Safety net: Never allow negative fees
+            if (calculatedFee < 0) calculatedFee = 0;
 
-            _context.Applications.Add(newApplication);
+            // ==========================================
+            // 💡 FIX: CLEAR OVER-VALIDATION ERRORS
+            // Tell ASP.NET to ignore these missing objects because 
+            // we are manually assigning them in the code below.
+            // ==========================================
+            ModelState.Remove("NewApplication.Program");
+            ModelState.Remove("NewApplication.Student");
+            ModelState.Remove("NewApplication.StudentProfileId");
+            ModelState.Remove("NewApplication.ProgramItemId");
+
+            if (!ModelState.IsValid)
+            {
+                return Page(); // Reload page to show the "Invalid Coupon" error message
+            }
+
+            // Lock in the application data
+            NewApplication.StudentProfileId = CurrentProfile.Id;
+            NewApplication.ProgramItemId = programId;
+            NewApplication.AppliedOn = DateTime.UtcNow;
+            NewApplication.Status = ApplicationStatus.Pending;
+
+            // 🔒 CRITICAL: Lock the price permanently in the ledger
+            NewApplication.FinalFee = calculatedFee;
+
+            _context.Applications.Add(NewApplication);
             await _context.SaveChangesAsync();
 
-            // Set a temporary success message to display on the dashboard
-            TempData["SuccessMessage"] = "Your application has been successfully submitted!";
-
+            TempData["SuccessMessage"] = "Application submitted successfully! Our team will review it shortly.";
             return RedirectToPage("/Dashboard/Index");
         }
     }
