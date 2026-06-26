@@ -65,17 +65,29 @@ namespace BluelinesPortal.Pages.Workspace
 
         public async Task<IActionResult> OnPostAsync()
         {
-            // 💡 FIX: Tell ASP.NET to ignore the missing Application object
+            // ==========================================
+            // 💡 FIX: CLEAR OVER-VALIDATION ERRORS
+            // Tell ASP.NET to ignore properties that the student 
+            // isn't supposed to fill out in the HTML form!
+            // ==========================================
             ModelState.Remove("NewSubmission.Application");
+            ModelState.Remove("NewSubmission.MentorFeedback");
+            ModelState.Remove("NewSubmission.ReviewStatus");
 
             if (!ModelState.IsValid)
             {
-                return await OnGetAsync(NewSubmission.StudentApplicationId); // Reload page on validation error
+                // If it still fails, reload the page
+                return await OnGetAsync(NewSubmission.StudentApplicationId);
             }
 
             // Lock in the server-side timestamps and default status
             NewSubmission.SubmittedOn = DateTime.UtcNow;
             NewSubmission.ReviewStatus = "Pending";
+
+            // Prevent SQL Null Crashes for optional fields
+            NewSubmission.MentorFeedback = "";
+            if (NewSubmission.CloudDriveLink == null) NewSubmission.CloudDriveLink = "";
+            if (NewSubmission.StudentNotes == null) NewSubmission.StudentNotes = "";
 
             _context.Submissions.Add(NewSubmission);
             await _context.SaveChangesAsync();

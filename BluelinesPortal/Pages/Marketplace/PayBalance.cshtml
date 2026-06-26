@@ -1,0 +1,45 @@
+﻿@page "{orderId:int}"
+@model BluelinesPortal.Pages.Marketplace.PayBalanceModel
+@{
+    ViewData["Title"] = "Clear Balance";
+}
+
+<div class="row justify-content-center mt-5 mb-5">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="card-header bg-warning p-4 border-0">
+                <a asp-page="/Workspace/Library" class="btn btn-sm btn-dark rounded-pill shadow-sm mb-3"><i class="bi bi-arrow-left"></i> Back</a>
+                <h3 class="fw-bold text-dark mb-0">Clear Your Balance</h3>
+                <p class="text-dark opacity-75 mb-0">Pay the remaining balance to instantly unlock your premium source code.</p>
+            </div>
+            <div class="card-body p-4 p-lg-5">
+
+                <div class="d-flex justify-content-between align-items-center mb-4 bg-light p-3 rounded border">
+                    <div>
+                        <h6 class="fw-bold mb-1">@Model.TargetOrder.Product.Title</h6>
+                        <span class="small text-muted">Order #@Model.TargetOrder.Id</span>
+                    </div>
+                    <div class="text-end">
+                        <span class="d-block small text-uppercase fw-bold text-danger">Amount Due</span>
+                        <span class="fs-4 fw-bold text-danger">₹@Model.TargetOrder.BalanceDue.ToString("0")</span>
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label asp-for="UTRNumber" class="form-label fw-bold small text-muted text-uppercase">Transaction / UTR No.</label>
+                        <input asp-for="UTRNumber" class="form-control" required />
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="ScreenshotUpload" class="form-label fw-bold small text-muted text-uppercase">Upload Payment Screenshot</label>
+                        <input asp-for="ScreenshotUpload" type="file" class="form-control" accept=".jpg,.jpeg,.png,.pdf" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm">
+                        Submit Payment Proof
+                    </button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

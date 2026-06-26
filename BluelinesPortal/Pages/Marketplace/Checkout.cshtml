@@ -1,0 +1,128 @@
+﻿@page
+@model BluelinesPortal.Pages.Marketplace.CheckoutModel
+@{
+    ViewData["Title"] = "Secure Checkout";
+    decimal finalTotal = Model.Product.Price + Model.TotalAddOnCost;
+    decimal splitAmount = finalTotal / 2;
+}
+
+<div class="row g-4 mb-5">
+    <!-- LEFT: Order Summary & Coupon -->
+    <div class="col-lg-5">
+        <div class="glass-card p-4 h-100 border-top border-primary border-4">
+            <h5 class="fw-bold mb-4 pb-2 border-bottom">Order Summary</h5>
+
+            <div class="d-flex align-items-center mb-4">
+                <h6 class="fw-bold text-dark mb-1">@Model.Product.Title</h6>
+            </div>
+
+            <!-- Cost Breakdown -->
+            <ul class="list-group list-group-flush mb-4">
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span class="text-muted">Project Cost</span>
+                    <span class="fw-bold">₹@Model.Product.Price.ToString("0")</span>
+                </li>
+                @if (Model.optExplanation > 0)
+                {
+                    <li class="list-group-item d-flex justify-content-between px-0"><span class="text-muted small">+ Explanation</span><span class="small fw-bold">₹500</span></li>
+                }
+                @if (Model.optInstallation > 0)
+                {
+                    <li class="list-group-item d-flex justify-content-between px-0"><span class="text-muted small">+ Installation</span><span class="small fw-bold">₹500</span></li>
+                }
+                @if (Model.optReport > 0)
+                {
+                    <li class="list-group-item d-flex justify-content-between px-0"><span class="text-muted small">+ Standard Report</span><span class="small fw-bold">₹500</span></li>
+                }
+                @if (Model.optFormatting > 0)
+                {
+                    <li class="list-group-item d-flex justify-content-between px-0"><span class="text-muted small">+ Formatting</span><span class="small fw-bold">₹1000</span></li>
+                }
+                @if (Model.optCustomization > 0)
+                {
+                    <li class="list-group-item d-flex justify-content-between px-0"><span class="text-muted small">+ Customization</span><span class="small fw-bold">₹1000</span></li>
+                }
+
+                <li class="list-group-item d-flex justify-content-between px-0 pt-3 border-top border-dark border-2 mt-2">
+                    <span class="fw-bold text-dark fs-5">Grand Total</span>
+                    <span class="fw-bold text-dark fs-5">₹@finalTotal.ToString("0")</span>
+                </li>
+            </ul>
+
+            <!-- Coupon Code -->
+            <div class="input-group mb-4 shadow-sm">
+                <input type="text" class="form-control bg-light border-end-0" placeholder="Coupon Code">
+                <button class="btn btn-dark fw-bold px-4" type="button">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Payment Options -->
+    <div class="col-lg-7">
+        <div class="glass-card p-4 p-lg-5 h-100">
+            <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-wallet2 text-primary me-2"></i> Select Payment Plan</h5>
+
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="productId" value="@Model.Product.Id" />
+
+                <!-- SPLIT PAYMENT RADIO BUTTONS -->
+                <div class="row g-3 mb-5">
+                    <div class="col-md-6">
+                        <label class="border rounded-3 p-3 w-100 cursor-pointer payment-box bg-primary bg-opacity-10 border-primary" id="box-full">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="PaymentPlan" id="payFull" value="Full" checked onchange="updatePaymentUI('full')">
+                                <label class="form-check-label fw-bold text-dark d-block" for="payFull">Pay Full Amount</label>
+                                <span class="fs-4 fw-bold text-primary d-block mt-1">₹@finalTotal.ToString("0")</span>
+                                <small class="text-muted">Get instant download access.</small>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="border rounded-3 p-3 w-100 cursor-pointer payment-box" id="box-split">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="PaymentPlan" id="paySplit" value="Split" onchange="updatePaymentUI('split')">
+                                <label class="form-check-label fw-bold text-dark d-block" for="paySplit">Pay 50% Advance</label>
+                                <span class="fs-4 fw-bold text-primary d-block mt-1">₹@splitAmount.ToString("0")</span>
+                                <small class="text-muted">Pay ₹@splitAmount.ToString("0") now, rest on delivery.</small>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- UPI UPLOAD SECTION (Kept from previous Step) -->
+                <div class="mb-5 bg-light p-4 rounded-4 border">
+                    <h6 class="fw-bold mb-3 text-dark">Please Pay: <span id="paymentAmountDisplay" class="fs-4 ms-2 text-success">₹@finalTotal.ToString("0")</span></h6>
+                    <!-- Your UPI QR & Input Fields go here as normal -->
+                    <label asp-for="UTRNumber" class="form-label fw-bold small text-muted text-uppercase">Transaction / UTR No.</label>
+                    <input asp-for="UTRNumber" class="form-control mb-3" required />
+
+                    <label asp-for="ScreenshotUpload" class="form-label fw-bold text-dark"><i class="bi bi-camera me-1"></i> Upload Payment Proof</label>
+                    <input asp-for="ScreenshotUpload" type="file" class="form-control" accept="image/png, image/jpeg" required />
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 py-3 fw-bold rounded-pill shadow-sm">
+                    Complete Order <i class="bi bi-check-circle-fill ms-2"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple script to make the radio buttons highlight and update the total!
+    function updatePaymentUI(mode) {
+        var boxFull = document.getElementById('box-full');
+        var boxSplit = document.getElementById('box-split');
+        var amountDisplay = document.getElementById('paymentAmountDisplay');
+
+        if(mode === 'full') {
+            boxFull.classList.add('bg-primary', 'bg-opacity-10', 'border-primary');
+            boxSplit.classList.remove('bg-primary', 'bg-opacity-10', 'border-primary');
+            amountDisplay.innerText = '₹@finalTotal.ToString("0")';
+        } else {
+            boxSplit.classList.add('bg-primary', 'bg-opacity-10', 'border-primary');
+            boxFull.classList.remove('bg-primary', 'bg-opacity-10', 'border-primary');
+            amountDisplay.innerText = '₹@splitAmount.ToString("0")';
+        }
+    }
+</script>

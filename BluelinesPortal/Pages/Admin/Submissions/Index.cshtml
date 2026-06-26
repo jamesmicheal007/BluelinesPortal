@@ -110,10 +110,19 @@
                                 }
                             </td>
                             <td class="text-end pe-4">
-                                <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm rounded-pill px-3"
-                                        data-bs-toggle="modal" data-bs-target="#gradeModal-@sub.Id">
-                                    <i class="bi bi-pencil-square me-1"></i> Grade Work
-                                </button>
+                                <div class="d-flex justify-content-end gap-1">
+                                    <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm rounded-pill px-3"
+                                            data-bs-toggle="modal" data-bs-target="#gradeModal-@sub.Id">
+                                        <i class="bi bi-pencil-square me-1"></i> Grade
+                                    </button>
+
+                                    @if (sub.ReviewStatus == "Approved")
+                                    {
+                                        <a asp-page="/Admin/Certificates/Manage" asp-route-id="@sub.StudentApplicationId" class="btn btn-sm btn-success rounded-pill fw-bold shadow-sm px-3" title="Manage Certificate">
+                                            <i class="bi bi-award-fill"></i>
+                                        </a>
+                                    }
+                                </div>
                             </td>
                         </tr>
                     }

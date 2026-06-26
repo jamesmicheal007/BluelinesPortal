@@ -21,5 +21,9 @@ namespace BluelinesPortal.Data
         public DbSet<Module> Modules { get; set; }
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<ProjectMaterial> ProjectMaterials { get; set; }
+        public DbSet<ProductCategory> ProductCategories { get; set; }
+        public DbSet<DigitalProduct> DigitalProducts { get; set; }
+        public DbSet<ProductAsset> ProductAssets { get; set; }
+        public DbSet<ProductOrder> ProductOrders { get; set; }
     }
 }

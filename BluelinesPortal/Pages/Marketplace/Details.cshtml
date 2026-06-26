@@ -1,0 +1,127 @@
+﻿@page "{id:int}"
+@model BluelinesPortal.Pages.Marketplace.DetailsModel
+@{
+    ViewData["Title"] = Model.Product.Title;
+}
+
+<style>
+    .glass-card {
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,0.08);
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+
+    .custom-checkbox:checked + .custom-control-label {
+        color: #0d6efd;
+        font-weight: bold;
+    }
+</style>
+
+<div class="mb-4">
+    <a asp-page="./Index" class="btn btn-light border shadow-sm rounded-pill px-3 fw-bold"><i class="bi bi-arrow-left me-1"></i> Back to Store</a>
+</div>
+
+<div class="row g-5 mb-5">
+    <!-- LEFT: Video, Abstract & Tabs -->
+    <div class="col-lg-8">
+        @if (!string.IsNullOrEmpty(Model.Product.YouTubeDemoUrl))
+        {
+            var embedUrl = Model.Product.YouTubeDemoUrl.Replace("watch?v=", "embed/");
+            <div class="ratio ratio-16x9 rounded-4 overflow-hidden shadow-sm border mb-4">
+                <iframe src="@embedUrl" allowfullscreen></iframe>
+            </div>
+        }
+
+        <div class="glass-card p-4 p-lg-5 mb-4">
+            <h4 class="fw-bold mb-4 border-bottom pb-2">Project Overview</h4>
+            <p class="text-muted" style="line-height: 1.8;">@Html.Raw(Model.Product.Abstract?.Replace("\n", "<br/>"))</p>
+        </div>
+
+        <div class="glass-card p-4 p-lg-5">
+            <h4 class="fw-bold mb-4 border-bottom pb-2">Technical Details</h4>
+            <table class="table table-bordered align-middle">
+                <tbody>
+                    <tr><th class="bg-light w-25">Applicable For</th><td>@(Model.Product.ApplicableFor ?? "B.Tech, M.Tech, BCA, MCA, Diploma")</td></tr>
+                    <tr><th class="bg-light">Frontend</th><td>@(Model.Product.FrontendTech ?? "N/A")</td></tr>
+                    <tr><th class="bg-light">Backend</th><td>@(Model.Product.BackendTech ?? "N/A")</td></tr>
+                    <tr><th class="bg-light">Database</th><td>@(Model.Product.DatabaseTech ?? "N/A")</td></tr>
+                    <tr><th class="bg-light">Modules</th><td>@(Model.Product.Modules ?? "Admin Module, User Module")</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RIGHT: Pricing, Add-ons & Checkout Form -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4 border-top border-primary border-4 position-sticky" style="top: 2rem;">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-bold mb-3">@Model.Product.Category.Name</span>
+            <h3 class="fw-bold text-dark mb-2">@Model.Product.Title</h3>
+
+            <div class="d-flex align-items-center mb-3">
+                <div class="text-warning me-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i></div>
+                <span class="small text-muted fw-bold">4.8 (124 Reviews)</span>
+            </div>
+
+            <div class="bg-light p-3 rounded-3 border mb-4">
+                <span class="d-block text-muted small fw-bold text-uppercase mb-1">Project Cost</span>
+                <div class="d-flex align-items-baseline gap-2">
+                    @if (Model.Product.OriginalPrice > Model.Product.Price)
+                    {
+                        <span class="text-muted text-decoration-line-through fs-5">₹@Model.Product.OriginalPrice.ToString("0")</span>
+                    }
+                    <span class="fw-bold text-success display-6">₹@Model.Product.Price.ToString("0")</span>
+                </div>
+                <span class="badge bg-success mt-2"><i class="bi bi-lightning-fill"></i> Delivery: @Model.Product.DeliveryTime</span>
+            </div>
+
+            <!-- FORM: Sends selected options to Checkout -->
+            <form method="get" action="/Marketplace/Checkout">
+                <input type="hidden" name="productId" value="@Model.Product.Id" />
+
+                <h6 class="fw-bold mb-3"><i class="bi bi-plus-circle-fill text-primary me-1"></i> Additional Options</h6>
+                <div class="list-group mb-4 shadow-sm">
+                    <label class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <input class="form-check-input me-2 custom-checkbox" type="checkbox" name="optExplanation" value="500">
+                            <span class="custom-control-label small fw-bold">Explanation</span>
+                        </div>
+                        <span class="badge bg-white text-dark border">₹500</span>
+                    </label>
+                    <label class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <input class="form-check-input me-2 custom-checkbox" type="checkbox" name="optInstallation" value="500">
+                            <span class="custom-control-label small fw-bold">Installation</span>
+                        </div>
+                        <span class="badge bg-white text-dark border">₹500</span>
+                    </label>
+                    <label class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <input class="form-check-input me-2 custom-checkbox" type="checkbox" name="optReport" value="500">
+                            <span class="custom-control-label small fw-bold">Standard Report</span>
+                        </div>
+                        <span class="badge bg-white text-dark border">₹500</span>
+                    </label>
+                    <label class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <input class="form-check-input me-2 custom-checkbox" type="checkbox" name="optFormatting" value="1000">
+                            <span class="custom-control-label small fw-bold">Report + College Formatting</span>
+                        </div>
+                        <span class="badge bg-white text-dark border">₹1000</span>
+                    </label>
+                    <label class="list-group-item d-flex justify-content-between align-items-center bg-light">
+                        <div>
+                            <input class="form-check-input me-2 custom-checkbox" type="checkbox" name="optCustomization" value="1000">
+                            <span class="custom-control-label small fw-bold">Change Name/Logo</span>
+                        </div>
+                        <span class="badge bg-white text-dark border">₹1000</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow">
+                    Add to Cart & Checkout <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

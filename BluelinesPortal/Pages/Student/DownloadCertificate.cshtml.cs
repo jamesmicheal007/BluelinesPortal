@@ -1,5 +1,4 @@
-using BluelinesPortal.Data;
-using BluelinesPortal.Models;
+﻿using BluelinesPortal.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -26,93 +25,128 @@ namespace BluelinesPortal.Pages.Student
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var userId = _userManager.GetUserId(User);
-            var profile = await _context.StudentProfiles.FirstOrDefaultAsync(p => p.IdentityUserId == userId);
 
-            // 1. Verify the student is enrolled in this program
+            // Fetch the specific application and ensure the student is enrolled
             var application = await _context.Applications
-                .Include(a => a.Student)
                 .Include(a => a.Program)
-                .FirstOrDefaultAsync(a => a.Id == id && a.StudentProfileId == profile.Id && a.Status == ApplicationStatus.Enrolled);
+                .Include(a => a.Student)
+                .FirstOrDefaultAsync(a => a.Id == id && a.Student.IdentityUserId == userId && a.Status == Models.ApplicationStatus.Enrolled);
 
-            if (application == null) return NotFound();
+            if (application == null)
+            {
+                return RedirectToPage("/Dashboard/Index");
+            }
 
-            // 2. Verify they actually have an 'Approved' submission from the mentor
-            var hasApprovedWork = await _context.Submissions
+            // Verify they have an Approved submission before generating the certificate
+            var hasApprovedProject = await _context.Submissions
                 .AnyAsync(s => s.StudentApplicationId == id && s.ReviewStatus == "Approved");
 
-            if (!hasApprovedWork)
+            if (!hasApprovedProject)
             {
-                TempData["ErrorMessage"] = "You must have an approved milestone to claim your certificate.";
-                return RedirectToPage("/Workspace/ProjectRoom", new { id = id });
+                TempData["WarningMessage"] = "You must have an approved submission to download the certificate.";
+                return RedirectToPage("/Workspace/Index", new { id = application.Id });
             }
 
-            // 3. Create or fetch the Certificate Database Record
-            var certificate = await _context.Certificates.FirstOrDefaultAsync(c => c.StudentApplicationId == id);
+            // --- DATE LOGIC ---
+            var startDate = application.AppliedOn;
+            var endDate = startDate.AddDays(application.Program.DurationInDays);
 
-            if (certificate == null)
+            // --- PRONOUN & PREFIX LOGIC ---
+            string prefix = "Mr./Ms. ";
+            string pronounSubject = "They";
+            string pronounObject = "them";
+            string pronounPossessive = "their";
+
+            var gender = application.Student.Gender?.ToLower();
+            if (gender == "male")
             {
-                certificate = new Certificate
-                {
-                    VerificationId = "BLT-" + DateTime.Now.Year + "-" + Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper(),
-                    StudentApplicationId = id,
-                    IssuedDate = DateTime.UtcNow
-                };
-                _context.Certificates.Add(certificate);
-                await _context.SaveChangesAsync();
+                prefix = "Mr. ";
+                pronounSubject = "He";
+                pronounObject = "him";
+                pronounPossessive = "his";
+            }
+            else if (gender == "female")
+            {
+                prefix = "Ms. ";
+                pronounSubject = "She";
+                pronounObject = "her";
+                pronounPossessive = "her";
             }
 
-            // 4. Draw the PDF using QuestPDF
-            var verificationUrl = $"{Request.Scheme}://{Request.Host}/Verify?id={certificate.VerificationId}";
+            // --- FALLBACK LOGIC FOR NULLS ---
+            string degree = string.IsNullOrEmpty(application.Student.DegreeProgram) ? "COMPUTER SCIENCE" : application.Student.DegreeProgram;
+            string college = string.IsNullOrEmpty(application.Student.CollegeName) ? "UNIVERSITY" : application.Student.CollegeName;
+            string studentId = string.IsNullOrEmpty(application.Student.StudentId) ? "" : $"({application.Student.StudentId})";
 
+            // ==========================================
+            // 💡 QUEST PDF: EXACT MATCH TO YOUR WORD DOC
+            // ==========================================
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4.Landscape());
-                    page.Margin(1, Unit.Inch);
-                    page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(12).FontFamily(Fonts.Arial));
+                    page.Margin(0);
+                    page.Background(Colors.White);
+                    page.DefaultTextStyle(x => x.FontSize(14).FontFamily(Fonts.Arial).LineHeight(1.5f));
 
-                    // Drawing the certificate border and layout
-                    page.Content().Border(8).BorderColor("#0d6efd").Padding(1.5f, Unit.Inch).Column(col =>
-                    {
-                        col.Item().AlignCenter().Text("BLUELINES TECH SOLUTIONS").FontSize(28).Bold().FontColor("#0d6efd").LetterSpacing(0.05f);
-
-                        // FIX: Move PaddingBottom(20) before .Text()
-                        col.Item().PaddingBottom(20).AlignCenter().Text("CERTIFICATE OF COMPLETION").FontSize(36).Black();
-
-                        col.Item().AlignCenter().Text("This is proudly presented to").FontSize(16).Italic().FontColor(Colors.Grey.Darken2);
-
-                        // FIX: Move PaddingVertical(10) before .Text()
-                        col.Item().PaddingVertical(10).AlignCenter().Text(application.Student.FullName).FontSize(38).Bold().FontColor(Colors.Grey.Darken4);
-
-                        col.Item().AlignCenter().Text("for successfully completing the rigorous technical requirements of").FontSize(16).Italic();
-
-                        // FIX: Move PaddingTop(10) before .Text()
-                        col.Item().PaddingTop(10).AlignCenter().Text(application.Program.Title).FontSize(24).Bold().FontColor("#0d6efd");
-
-                        // Signatures and Verification Footer
-                        col.Item().PaddingTop(50).Row(row =>
+                    // Outer padding and Double Border
+                    page.Content()
+                        .Padding(30)
+                        .Border(4).BorderColor("#0d6efd") // Thick Blue Outer Border
+                        .Padding(4)
+                        .Border(1).BorderColor("#0d6efd") // Thin Blue Inner Border
+                        .Padding(50)
+                        .Column(col =>
                         {
-                            row.RelativeItem().Column(c => {
-                                c.Item().Text("Michael James").FontSize(16).Bold();
-                                c.Item().Text("Director, Bluelines Tech");
-                                c.Item().Text("Kovilpatti, Tamil Nadu").FontSize(10).FontColor(Colors.Grey.Medium);
+                            // 1. Date (Top Left)
+                            col.Item().Text($"{DateTime.Now:MMMM dd, yyyy}").FontSize(12).SemiBold();
+
+                            // 2. Title (Center)
+                            col.Item().PaddingTop(20).AlignCenter()
+                               .Text("CERTIFICATE OF COMPLETION")
+                               .FontSize(32).Bold().FontColor("#0d6efd");
+
+                            // 3. Body Text (Matching your exact wording)
+                            col.Item().PaddingTop(40).Text(text =>
+                            {
+                                text.Span("To whom it may concern,\n\n").SemiBold();
+
+                                text.Span("\tThis is to certify that  ");
+                                text.Span($"{prefix} {application.Student.FullName.ToUpper()}  {studentId}  ").Bold();
+                                text.Span("from  ");
+                                text.Span($"DEPARTMENT OF {degree.ToUpper()},  {college.ToUpper()}  ").Bold();
+                                text.Span("has successfully completed an internship program at Bluelines Tech Solutions, Kovilpatti as a ");
+                                text.Span($"{application.Program.Title.ToUpper()}").Bold();
+                                text.Span(".");
                             });
 
-                            row.RelativeItem().AlignRight().Column(c => {
-                                c.Item().Text($"Issue Date: {certificate.IssuedDate:dd MMM yyyy}");
-                                c.Item().Text($"Verify at: {verificationUrl}").FontSize(10).FontColor(Colors.Blue.Medium).Underline();
-                                c.Item().Text($"ID: {certificate.VerificationId}").FontSize(10).FontColor(Colors.Grey.Medium);
+                            col.Item().PaddingTop(20).Text(text =>
+                            {
+                                text.Span($"\t{pronounSubject} was part of the program from ");
+                                text.Span($"{startDate:dd-MM-yyyy}").Bold();
+                                text.Span(" to ");
+                                text.Span($"{endDate:dd-MM-yyyy}").Bold();
+                                text.Span($". During {pronounPossessive} tenure as an intern, {pronounSubject.ToLower()} demonstrated enthusiasm, leadership, self-discipline, and self-motivation.\n\n");
+
+                                text.Span($"\tWe were fortunate to have {pronounObject} as one of our interns, and we wish {pronounObject} all the best in {pronounPossessive} future endeavors.");
+                            });
+
+                            // 4. Signature Block (Bottom Left)
+                            col.Item().PaddingTop(40).Column(sig =>
+                            {
+                                sig.Item().Text("Sincerely,").SemiBold();
+                                sig.Item().PaddingTop(30).Text("MICHAEL JAMES S").Bold();
+                                sig.Item().Text("(Project Manager)");
+                                sig.Item().Text("+91 9789175161");
                             });
                         });
-                    });
                 });
             });
 
-            // Return the drawn PDF as a file download
+            // Generate and return the PDF file
             byte[] pdfBytes = document.GeneratePdf();
-            return File(pdfBytes, "application/pdf", $"{application.Student.FullName.Replace(" ", "_")}_Certificate.pdf");
+            return File(pdfBytes, "application/pdf", $"Bluelines_Certificate_{application.Student.FullName.Replace(" ", "_")}.pdf");
         }
     }
 }

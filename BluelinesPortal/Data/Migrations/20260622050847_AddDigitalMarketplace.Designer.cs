@@ -4,6 +4,7 @@ using BluelinesPortal.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BluelinesPortal.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260622050847_AddDigitalMarketplace")]
+    partial class AddDigitalMarketplace
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,10 +55,6 @@ namespace BluelinesPortal.Data.Migrations
                     b.Property<string>("Abstract")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ApplicableFor")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<string>("BackendTech")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -70,11 +69,6 @@ namespace BluelinesPortal.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<string>("DeliveryTime")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("FrontendTech")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -84,13 +78,6 @@ namespace BluelinesPortal.Data.Migrations
 
                     b.Property<bool>("IsFree")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Modules")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("OriginalPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -295,33 +282,11 @@ namespace BluelinesPortal.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("AddOnTotal")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("AmountPaid")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("BalanceDue")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("BalanceScreenshotPath")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("BalanceStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("BalanceUTRNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<int>("DigitalProductId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("IsSplitPayment")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime2");
@@ -339,9 +304,6 @@ namespace BluelinesPortal.Data.Migrations
                     b.Property<string>("ScreenshotPath")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("SelectedAddOns")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("StudentProfileId")
                         .HasColumnType("int");

@@ -1,0 +1,134 @@
+﻿@page "{id:int}"
+@model BluelinesPortal.Pages.Admin.Marketplace.AssetsModel
+@{
+    ViewData["Title"] = "Manage Project Assets";
+}
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+</style>
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <div>
+        <a asp-page="./Index" class="btn btn-light border shadow-sm rounded-pill px-3 fw-bold mb-3"><i class="bi bi-arrow-left me-1"></i> Back to Store</a>
+        <h2 class="fw-bold mb-0">Digital Asset Manager</h2>
+        <p class="text-muted small">Upload downloadable files for: <strong>@Model.ProductDetails.Title</strong></p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 fw-bold">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+<div class="row g-4 mb-5">
+
+    <div class="col-lg-4">
+        <div class="glass-card p-4 border-top border-primary border-4 position-sticky" style="top: 2rem;">
+            <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-cloud-arrow-up text-primary me-2"></i> Upload New File</h5>
+
+            <form method="post" asp-page-handler="Upload" enctype="multipart/form-data">
+                <input type="hidden" name="id" value="@Model.ProductDetails.Id" />
+
+                <div class="mb-4">
+                    <label asp-for="NewAsset.Title" class="form-label fw-bold text-muted small text-uppercase">Asset Name <span class="text-danger">*</span></label>
+                    <input asp-for="NewAsset.Title" class="form-control" placeholder="e.g. Complete Source Code ZIP, Abstract PDF" required />
+                </div>
+
+                <div class="mb-4 p-3 bg-light rounded border">
+                    <label class="form-label fw-bold text-dark small text-uppercase mb-2"><i class="bi bi-file-earmark-zip me-1"></i> Option A: Upload File</label>
+                    <input asp-for="FileUpload" type="file" class="form-control form-control-sm mb-3" />
+
+                    <div class="text-center text-muted small fw-bold mb-3">- OR -</div>
+
+                    <label asp-for="NewAsset.ExternalLink" class="form-label fw-bold text-dark small text-uppercase mb-2"><i class="bi bi-link-45deg me-1"></i> Option B: External Link</label>
+                    <input asp-for="NewAsset.ExternalLink" class="form-control form-control-sm" placeholder="Google Drive, Mega, etc." />
+                </div>
+
+                <div class="form-check form-switch mb-4 p-3 bg-warning bg-opacity-10 rounded border border-warning border-opacity-25">
+                    <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" asp-for="NewAsset.IsPremium" checked>
+                    <label class="form-check-label fw-bold text-dark" asp-for="NewAsset.IsPremium">Premium Access Only</label>
+                    <div class="form-text" style="font-size: 0.75rem;">If checked, only students who successfully purchased this project can download it.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm rounded-pill">
+                    <i class="bi bi-plus-lg me-1"></i> Add File to Project
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="glass-card p-4 p-lg-5 h-100">
+            <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-folder2-open text-primary me-2"></i> Project Directory</h5>
+
+            @if (Model.ExistingAssets.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-3">Asset Details</th>
+                                <th>Access Level</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var asset in Model.ExistingAssets)
+                            {
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-bold text-dark">@asset.Title</div>
+                                        @if (!string.IsNullOrEmpty(asset.FilePath))
+                                        {
+                                            <a href="@asset.FilePath" target="_blank" class="small text-decoration-none"><i class="bi bi-download me-1"></i> Hosted File</a>
+                                        }
+                                        else if (!string.IsNullOrEmpty(asset.ExternalLink))
+                                        {
+                                            <a href="@asset.ExternalLink" target="_blank" class="small text-decoration-none text-info"><i class="bi bi-box-arrow-up-right me-1"></i> External Link</a>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (asset.IsPremium)
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-lock-fill me-1"></i> Premium (Paid)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-unlock-fill me-1"></i> Public Freebie</span>
+                                        }
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <form method="post" asp-page-handler="Delete" onsubmit="return confirm('Are you sure you want to permanently delete this file?');">
+                                            <input type="hidden" name="assetId" value="@asset.Id" />
+                                            <input type="hidden" name="productId" value="@Model.ProductDetails.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Delete File">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-box-seam display-1 text-muted opacity-25 d-block mb-3"></i>
+                    <h5 class="fw-bold text-muted">No Files Uploaded</h5>
+                    <p class="text-muted small">Upload ZIP files or links here. Once verified, students will download these from their Library.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

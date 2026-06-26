@@ -1,0 +1,100 @@
+﻿@page "{id:int}"
+@model BluelinesPortal.Pages.Admin.Certificates.ManageModel
+@{
+    ViewData["Title"] = "Issue Certificate";
+}
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+</style>
+
+<div class="mb-4">
+    <a asp-page="/Admin/Submissions/Index" class="btn btn-light border shadow-sm rounded-pill px-3 fw-bold mb-3"><i class="bi bi-arrow-left me-1"></i> Back to Submissions</a>
+    <h2 class="fw-bold mb-0">Certificate Control Desk</h2>
+    <p class="text-muted small">Verify or correct the exact text that will be printed on the student's official PDF.</p>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4 fw-bold">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+    </div>
+}
+
+<form method="post">
+    <input type="hidden" asp-for="ApplicationId" />
+    <input type="hidden" asp-for="ProfileId" />
+    <input type="hidden" asp-for="StudentId" />
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="glass-card p-4 p-lg-5 h-100 border-top border-primary border-4">
+                <h5 class="fw-bold mb-4 pb-2 border-bottom"><i class="bi bi-pencil-square text-primary me-2"></i> Document Data</h5>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label asp-for="StudentName" class="form-label fw-bold small text-muted text-uppercase">Full Name (Check Spelling)</label>
+                        <input asp-for="StudentName" class="form-control fw-bold text-dark" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Gender" class="form-label fw-bold small text-muted text-uppercase">Pronouns Setup</label>
+                        <select asp-for="Gender" class="form-select">
+                            <option value="Male">Male (He/Him)</option>
+                            <option value="Female">Female (She/Her)</option>
+                            <option value="Other">Other (They/Them)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="DegreeProgram" class="form-label fw-bold small text-muted text-uppercase">Degree Department</label>
+                        <input asp-for="DegreeProgram" class="form-control text-uppercase" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="CollegeName" class="form-label fw-bold small text-muted text-uppercase">College / Institution</label>
+                        <input asp-for="CollegeName" class="form-control text-uppercase" required />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="ProgramTitle" class="form-label fw-bold small text-muted text-uppercase">Program / Role Title</label>
+                    <input asp-for="ProgramTitle" class="form-control fw-bold" required />
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="StartDate" class="form-label fw-bold small text-muted text-uppercase">Display Start Date</label>
+                        <input asp-for="StartDate" type="date" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="EndDate" class="form-label fw-bold small text-muted text-uppercase">Display End Date</label>
+                        <input asp-for="EndDate" type="date" class="form-control" required />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="glass-card p-4 h-100 bg-light">
+                <h5 class="fw-bold mb-4 pb-2 border-bottom">Actions</h5>
+
+                <p class="small text-muted mb-4">You can download the PDF immediately to test how the layout looks. If you fixed typos in the student's name or college, be sure to save them to the database.</p>
+
+                <button type="submit" asp-page-handler="DownloadPdf" formtarget="_blank" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm mb-3">
+                    <i class="bi bi-file-earmark-pdf-fill me-2"></i> Download PDF
+                </button>
+
+                <button type="submit" asp-page-handler="UpdateDatabase" class="btn btn-outline-dark w-100 fw-bold rounded-pill shadow-sm">
+                    <i class="bi bi-database-check me-2"></i> Save Fixes to Database
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

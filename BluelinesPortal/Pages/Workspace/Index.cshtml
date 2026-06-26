@@ -105,7 +105,7 @@
                     <p class="text-muted mb-4 mx-auto" style="max-width: 300px;">
                         Congratulations! Your mentor has approved your final submission. This workspace is now locked.
                     </p>
-                    <a href="#" class="btn btn-gradient btn-lg fw-bold rounded-pill px-4 shadow-sm">
+                    <a asp-page="/Student/DownloadCertificate" asp-route-id="@Model.ActiveApplication.Id" class="btn btn-gradient btn-lg fw-bold rounded-pill px-4 shadow-sm">
                         <i class="bi bi-patch-check-fill me-2"></i> Download Certificate
                     </a>
                 </div>
@@ -126,7 +126,7 @@
                         <label asp-for="NewSubmission.GitHubLink" class="form-label fw-bold small text-muted text-uppercase">GitHub Repository URL <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="bi bi-github"></i></span>
-                            <input asp-for="NewSubmission.GitHubLink" class="form-control" placeholder="https://github.com/..." required />
+                            <input asp-for="NewSubmission.GitHubLink" type="url" class="form-control" placeholder="https://github.com/..." required />
                         </div>
                         <span asp-validation-for="NewSubmission.GitHubLink" class="text-danger small"></span>
                     </div>
@@ -135,7 +135,7 @@
                         <label asp-for="NewSubmission.CloudDriveLink" class="form-label fw-bold small text-muted text-uppercase">Cloud Drive Link (Optional)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light"><i class="bi bi-cloud-check"></i></span>
-                            <input asp-for="NewSubmission.CloudDriveLink" class="form-control" placeholder="Google Drive, OneDrive, or Figma URL" />
+                            <input asp-for="NewSubmission.CloudDriveLink" type="url" class="form-control" placeholder="Google Drive, OneDrive, or Figma URL" />
                         </div>
                         <div class="form-text small">Use this if you need to submit ZIP files, images, or designs.</div>
                         <span asp-validation-for="NewSubmission.CloudDriveLink" class="text-danger small"></span>

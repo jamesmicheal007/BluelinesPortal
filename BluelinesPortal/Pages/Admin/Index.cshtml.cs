@@ -1,8 +1,8 @@
-using BluelinesPortal.Data;
-using BluelinesPortal.Models;
+﻿using BluelinesPortal.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace BluelinesPortal.Pages.Admin
 {
@@ -16,56 +16,60 @@ namespace BluelinesPortal.Pages.Admin
             _context = context;
         }
 
-        // Top Level Metrics
-        public int TotalStudents { get; set; }
-        public int TotalApplications { get; set; }
+        // --- TOP LEVEL METRICS ---
         public decimal TotalRevenue { get; set; }
+        public int TotalStudents { get; set; }
+        public int PendingVerifications { get; set; }
+        public int ActiveInternships { get; set; }
 
-        // Data for Pie Chart (Application Statuses)
-        public List<string> StatusLabels { get; set; } = new List<string>();
-        public List<int> StatusCounts { get; set; } = new List<int>();
-
-        // Data for Bar Chart (Recent Revenue)
-        public List<string> RevenueLabels { get; set; } = new List<string>();
-        public List<decimal> RevenueData { get; set; } = new List<decimal>();
+        // --- CHART DATA (Serialized for JavaScript) ---
+        public string ChartLabelsJson { get; set; }
+        public string ChartDataJson { get; set; }
 
         public async Task OnGetAsync()
         {
-            // 1. Calculate Top Level Metrics
+            // 1. Calculate Top Metrics
+            TotalRevenue = await _context.ProductOrders
+                .Where(o => o.OrderStatus == "Success" || o.OrderStatus == "Paid")
+                .SumAsync(o => o.AmountPaid);
+
             TotalStudents = await _context.StudentProfiles.CountAsync();
-            TotalApplications = await _context.Applications.CountAsync();
-            TotalRevenue = await _context.Payments.SumAsync(p => p.AmountPaid);
 
-            // 2. Prepare Data for the Pie Chart (Group by Status)
-            var statusGroups = await _context.Applications
-                .GroupBy(a => a.Status)
-                .Select(g => new { Status = g.Key.ToString(), Count = g.Count() })
+            PendingVerifications = await _context.ProductOrders
+                .CountAsync(o => o.OrderStatus == "PendingVerification" || o.BalanceStatus == "PendingVerification");
+
+            ActiveInternships = await _context.Applications
+                .CountAsync(a => a.Status == Models.ApplicationStatus.Enrolled);
+
+            // 2. Generate 30-Day Revenue Chart Data
+            var startDate = DateTime.UtcNow.AddDays(-30).Date;
+
+            // Fetch only successful orders from the last 30 days
+            var recentOrders = await _context.ProductOrders
+                .Where(o => o.OrderDate >= startDate && (o.OrderStatus == "Success" || o.OrderStatus == "Paid"))
+                .Select(o => new { o.OrderDate, o.AmountPaid })
                 .ToListAsync();
 
-            foreach (var group in statusGroups)
+            var labels = new List<string>();
+            var revenueData = new List<decimal>();
+
+            // Loop through each of the last 30 days to ensure flat days show as ₹0
+            for (int i = 0; i <= 30; i++)
             {
-                StatusLabels.Add(group.Status);
-                StatusCounts.Add(group.Count);
+                var targetDate = startDate.AddDays(i);
+                labels.Add(targetDate.ToString("MMM dd")); // e.g., "Jun 12"
+
+                // Sum revenue for this specific day
+                var dailyTotal = recentOrders
+                    .Where(o => o.OrderDate.Date == targetDate)
+                    .Sum(o => o.AmountPaid);
+
+                revenueData.Add(dailyTotal);
             }
 
-            // 3. Prepare Data for the Bar Chart (Last 7 Days Revenue)
-            var sevenDaysAgo = DateTime.UtcNow.AddDays(-6).Date;
-
-            var dailyRevenue = await _context.Payments
-                .Where(p => p.PaymentDate >= sevenDaysAgo)
-                .GroupBy(p => p.PaymentDate.Date)
-                .Select(g => new { Date = g.Key, Total = g.Sum(p => p.AmountPaid) })
-                .ToListAsync();
-
-            // Ensure we have a label for all 7 days, even if revenue was 0
-            for (int i = 0; i < 7; i++)
-            {
-                var targetDate = sevenDaysAgo.AddDays(i);
-                RevenueLabels.Add(targetDate.ToString("dd MMM"));
-
-                var dayData = dailyRevenue.FirstOrDefault(d => d.Date == targetDate);
-                RevenueData.Add(dayData != null ? dayData.Total : 0);
-            }
+            // Convert C# Lists to JSON strings so Chart.js can read them in the HTML
+            ChartLabelsJson = JsonSerializer.Serialize(labels);
+            ChartDataJson = JsonSerializer.Serialize(revenueData);
         }
     }
 }

@@ -1,0 +1,100 @@
+﻿@page
+@model BluelinesPortal.Pages.Admin.Marketplace.CreateModel
+@{
+    ViewData["Title"] = "List New Product";
+}
+
+<div class="row justify-content-center mb-5">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center mb-4">
+            <a asp-page="./Index" class="btn btn-light border shadow-sm me-3"><i class="bi bi-arrow-left"></i></a>
+            <h3 class="mb-0 fw-bold">List Digital Product</h3>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            <div class="row g-4">
+                <div class="col-md-7">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4 border-bottom pb-2">Product Information</h5>
+
+                            <div class="mb-3">
+                                <label asp-for="NewProduct.Title" class="form-label fw-bold">Project / Template Title <span class="text-danger">*</span></label>
+                                <input asp-for="NewProduct.Title" class="form-control form-control-lg" placeholder="e.g. E-Commerce Backend API" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="NewProduct.ShortDescription" class="form-label fw-bold">One-Line Summary</label>
+                                <input asp-for="NewProduct.ShortDescription" class="form-control" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="NewProduct.Abstract" class="form-label fw-bold">Detailed Abstract / Description</label>
+                                <textarea asp-for="NewProduct.Abstract" class="form-control" rows="6" placeholder="Describe the project features..."></textarea>
+                            </div>
+
+                            <h5 class="fw-bold mt-5 mb-4 border-bottom pb-2">Technology Stack</h5>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label asp-for="NewProduct.FrontendTech" class="form-label fw-bold small text-muted text-uppercase">Frontend</label>
+                                    <input asp-for="NewProduct.FrontendTech" class="form-control" placeholder="e.g. React, Bootstrap" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="NewProduct.BackendTech" class="form-label fw-bold small text-muted text-uppercase">Backend</label>
+                                    <input asp-for="NewProduct.BackendTech" class="form-control" placeholder="e.g. ASP.NET Core, Node" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label asp-for="NewProduct.DatabaseTech" class="form-label fw-bold small text-muted text-uppercase">Database</label>
+                                    <input asp-for="NewProduct.DatabaseTech" class="form-control" placeholder="e.g. SQL Server, MongoDB" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-5">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-4 border-bottom pb-2">Store Setup</h5>
+
+                            <div class="mb-4">
+                                <label asp-for="NewProduct.CategoryId" class="form-label fw-bold small text-muted text-uppercase">Marketplace Category <span class="text-danger">*</span></label>
+                                <select asp-for="NewProduct.CategoryId" asp-items="Model.CategoryList" class="form-select form-select-lg" required>
+                                    <option value="">-- Choose Category --</option>
+                                </select>
+                            </div>
+
+                            <div class="p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 mb-4">
+                                <label asp-for="NewProduct.Price" class="form-label fw-bold text-success">Product Price (₹) <span class="text-danger">*</span></label>
+                                <input asp-for="NewProduct.Price" type="number" step="0.01" class="form-control form-control-lg fw-bold" placeholder="0.00 for FREE" required />
+                                <div class="form-text small text-success">Enter 0 to make this a Free Download.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="NewProduct.YouTubeDemoUrl" class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-youtube text-danger me-1"></i> YouTube Demo Link</label>
+                                <input asp-for="NewProduct.YouTubeDemoUrl" type="url" class="form-control" placeholder="https://youtube.com/..." />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-muted text-uppercase"><i class="bi bi-image text-primary me-1"></i> Display Thumbnail</label>
+                                <input asp-for="ThumbnailUpload" type="file" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+                            </div>
+
+                            <div class="form-check form-switch mt-4 p-3 bg-light rounded border">
+                                <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" asp-for="NewProduct.IsActive" checked>
+                                <label class="form-check-label fw-bold text-dark" asp-for="NewProduct.IsActive">Visible in Store</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-4 bg-light">
+                <div class="card-body d-flex justify-content-end p-3">
+                    <a asp-page="./Index" class="btn btn-outline-secondary me-2 fw-bold">Cancel</a>
+                    <button type="submit" class="btn btn-dark px-5 fw-bold shadow-sm"><i class="bi bi-bag-plus-fill me-2"></i> List in Store</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
